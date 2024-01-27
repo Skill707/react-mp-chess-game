@@ -1,0 +1,16 @@
+.GameBoard {
+    display: flex;
+    flex-wrap: wrap;
+    height: 100dvh;
+    aspect-ratio: 1;
+    border: 1px solid black;
+
+}
+
+.GameBoard2 {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid black;
+}

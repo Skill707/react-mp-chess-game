@@ -1,0 +1,49 @@
+@function color-contrast($color1, $color2: #fff, $dark-color: #000, $lightness: 43%) {
+  // Извлекаем светлоту цветов
+  $l1: lightness($color1);
+  $l2: lightness($color2);
+
+  // Подбираем контрастный цвет
+  @if abs($l1 - $l2)>$lightness {
+    @return $dark-color;
+  }
+
+  @else {
+    @return $light-color;
+  }
+}
+
+.Field {
+  width: 12.5%;
+  height: 12.5%;
+  aspect-ratio: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  p {
+    position: absolute;
+    z-index: 5;
+    font-size: smaller;
+    text-transform: uppercase;
+    top: 0;
+    left: 0;
+  }
+}
+
+.path {
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background-color: rgba(255, 0, 0, 0.363);
+  position: absolute;
+}
+
+.kill {
+  width: 75%;
+  height: 75%;
+  border-radius: 50%;
+  background-color: rgba(255, 0, 0, 0.801);
+  position: absolute;
+}

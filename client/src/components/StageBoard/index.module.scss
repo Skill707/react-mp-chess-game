@@ -1,0 +1,23 @@
+.StageBoard {
+    background-color: coral;
+    border: 1px solid black;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100dvh;
+
+    div {
+        background-color: transparent !important;
+    }
+}
+
+.StageBoard2 {
+    background-color: coral;
+    border: 1px solid black;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+
+    div {
+        background-color: transparent !important;
+    }
+}
