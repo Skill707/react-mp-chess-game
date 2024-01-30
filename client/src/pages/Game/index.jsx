@@ -17,9 +17,9 @@ export default function Game() {
 	}, []);
 
 	if (loggedUser != null) {
-		var socket = socketIO.connect("https://bronzed-curious-cost.glitch.me"); 
+		var socket = socketIO.connect("https://chess-game-server.glitch.me"); 
 		// http://localhost:4000
-		// https://bronzed-curious-cost.glitch.me
+		// https://chess-game-server.glitch.me
 		socket.emit("checkNewUsername", { username: loggedUser });
 	}
 
