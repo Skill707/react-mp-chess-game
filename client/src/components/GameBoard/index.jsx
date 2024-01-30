@@ -2,6 +2,7 @@ import css from "./index.module.scss";
 import Field from "../Field";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
+import { editFieldArray } from "../../redux/dataSlice";
 
 const playerTeam = "Black";
 let enemyTeam = "";
@@ -84,8 +85,12 @@ export default function GameBoard({ socket }) {
 	const dispatch = useDispatch();
 
 	useEffect(() => {
+		socket.emit("getFieldArray");
+		socket.on("getFieldArrayResponse", (data) => {
+			dispatch(editFieldArray(data));
+		});
 		socket.on("updateFieldArrayResponse", (data) => {
-			fieldArray = data;
+			dispatch(editFieldArray(data));
 		});
 	}, [socket]);
 
