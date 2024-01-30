@@ -1,5 +1,4 @@
 import css from "./index.module.scss";
-import PropTypes from "prop-types";
 import { FaChessBishop } from "react-icons/fa";
 import { FaChessKing } from "react-icons/fa";
 import { FaChessKnight } from "react-icons/fa";
@@ -26,7 +25,3 @@ export default function Piece({ piece }) {
 		</div>
 	);
 }
-
-Piece.propTypes = {
-	piece: PropTypes.object.isRequired,
-};

@@ -1,12 +1,11 @@
 import css from "./index.module.scss";
-import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
-import { addToStageArray, editFieldArray, select } from "../../redux/testSlice";
+import { addToStageArray, editFieldArray, select } from "../../redux/dataSlice";
 import Piece from "./../Piece/index";
 
 export default function Field({ fieldData }) {
-	const selectedBox = useSelector((state) => state.test.selectedBox);
-	const fieldArray = useSelector((state) => state.test.fieldArray);
+	const selectedBox = useSelector((state) => state.data.selectedBox);
+	const fieldArray = useSelector((state) => state.data.fieldArray);
 	const dispatch = useDispatch();
 	const playerTeam = "Black";
 
@@ -88,7 +87,3 @@ export default function Field({ fieldData }) {
 		</div>
 	);
 }
-
-Field.propTypes = {
-	fieldData: PropTypes.object.isRequired,
-};

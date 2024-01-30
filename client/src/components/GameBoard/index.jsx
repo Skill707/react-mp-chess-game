@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import css from "./index.module.scss";
 import Field from "../Field";
 import { useDispatch, useSelector } from "react-redux";
@@ -76,11 +75,11 @@ function getSideOfField2(side, item, array) {
 	return result;
 }
 
-export default function GameBoard() {
+export default function GameBoard({socket}) {
 	console.log("GameBoard component rendered");
 
-	let fieldArray = useSelector((state) => state.test.fieldArray);
-	const selectedField = useSelector((state) => state.test.selectedBox);
+	let fieldArray = useSelector((state) => state.data.fieldArray);
+	const selectedField = useSelector((state) => state.data.selectedBox);
 	const dispatch = useDispatch();
 
 	if (selectedField) {

@@ -1,8 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-export const testSlice = createSlice({
-	name: "test",
+function GetUserFromLS() {
+	let result = null;
+
+	const LSloggedUser = JSON.parse(localStorage.getItem("ChessGameUserName"));
+	const SSloggedUser = JSON.parse(sessionStorage.getItem("ChessGameUserName"));
+	if (SSloggedUser) result = SSloggedUser;
+	else if (LSloggedUser) result = LSloggedUser;
+
+	return result;
+}
+
+export const dataSlice = createSlice({
+	name: "data",
 	initialState: {
+		loggedUser: GetUserFromLS(),
 		fieldArray: [
 			{
 				x: "a",
@@ -406,9 +418,12 @@ export const testSlice = createSlice({
 		select: (state, action) => {
 			state.selectedBox = action.payload;
 		},
+		setLoggedUser: (state, action) => {
+			state.loggedUser = action.payload;
+		},
 	},
 });
 
-export const { select, editFieldArray, addToStageArray } = testSlice.actions;
+export const { select, editFieldArray, addToStageArray, setLoggedUser } = dataSlice.actions;
 
-export default testSlice.reducer;
+export default dataSlice.reducer;

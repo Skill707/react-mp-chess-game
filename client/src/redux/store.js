@@ -1,8 +1,8 @@
-import { configureStore } from '@reduxjs/toolkit'
-import testReducer from './testSlice.js'
+import { configureStore } from "@reduxjs/toolkit";
+import dataReducer from "./dataSlice.js";
 
 export default configureStore({
-  reducer: {
-    test: testReducer,
-  },
-})
+	reducer: {
+		data: dataReducer,
+	},
+});

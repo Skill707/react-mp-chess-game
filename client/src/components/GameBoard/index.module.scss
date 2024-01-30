@@ -1,7 +1,7 @@
 .GameBoard {
     display: flex;
     flex-wrap: wrap;
-    height: 100dvh;
+    height: calc(100dvh - 40px);
     aspect-ratio: 1;
     border: 1px solid black;
 

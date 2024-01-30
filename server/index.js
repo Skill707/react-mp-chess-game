@@ -1,82 +1,67 @@
 const express = require("express");
-const { createServer } = require("node:http");
-const { join } = require("node:path");
-const { Server } = require("socket.io");
-const sqlite3 = require("sqlite3");
-const { open } = require("sqlite");
-const { availableParallelism } = require("node:os");
-const cluster = require("node:cluster");
-const { createAdapter, setupPrimary } = require("@socket.io/cluster-adapter");
+const app = express();
+const cors = require("cors");
+const { log } = require("console");
+const http = require("http").Server(app);
+const PORT = 4000;
+const socketIO = require("socket.io")(http, {
+	cors: {
+		origin: "http://localhost:5173",
+	},
+});
 
-if (cluster.isPrimary) {
-	const numCPUs = availableParallelism();
-	for (let i = 0; i < numCPUs; i++) {
-		cluster.fork({
-			PORT: 3000 + i,
-		});
-	}
+app.use(cors());
+let users = [];
 
-	return setupPrimary();
-}
+socketIO.on("connection", (socket) => {
+	console.log(`⚡: id ${socket.id} just connected!`);
 
-async function main() {
-	const db = await open({
-		filename: "chat.db",
-		driver: sqlite3.Database,
-	});
+	// socket.on("message", (data) => {
+	// 	socketIO.emit("messageResponse", data);
+	// });
+	// socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
 
-	await db.exec(`
-    CREATE TABLE IF NOT EXISTS messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      client_offset TEXT UNIQUE,
-      content TEXT
-    );
-  `);
-
-	const app = express();
-	const server = createServer(app);
-	const io = new Server(server, {
-		connectionStateRecovery: {},
-		adapter: createAdapter(),
-	});
-
-	app.get("/", (req, res) => {
-		res.sendFile(join(__dirname, "index.html"));
-	});
-
-	io.on("connection", async (socket) => {
-		socket.on("chat message", async (msg, clientOffset, callback) => {
-			let result;
-			try {
-				result = await db.run("INSERT INTO messages (content, client_offset) VALUES (?, ?)", msg, clientOffset);
-			} catch (e) {
-				if (e.errno === 19 /* SQLITE_CONSTRAINT */) {
-					callback();
-				} else {
-					// nothing to do, just let the client retry
-				}
-				return;
-			}
-			io.emit("chat message", msg, result.lastID);
-			callback();
-		});
-
-		if (!socket.recovered) {
-			try {
-				await db.each("SELECT id, content FROM messages WHERE id > ?", [socket.handshake.auth.serverOffset || 0], (_err, row) => {
-					socket.emit("chat message", row.content, row.id);
-				});
-			} catch (e) {
-				// something went wrong
-			}
+	socket.on("checkNewUsername", (data) => {
+		console.log("checkNewUsername!");
+		const check = users.find((user) => user.username == data.username);
+		if (check == undefined) {
+			console.log(`username ${data.username} accepted`);
+			socketIO.emit("checkNewUsernameResponse", { username: data.username, accepted: true });
+		} else {
+			console.log(`username ${data.username} rejected`);
+			socketIO.emit("checkNewUsernameResponse", { username: data.username, accepted: false });
 		}
 	});
 
-	const port = process.env.PORT;
-
-	server.listen(port, () => {
-		console.log(`server running at http://localhost:${port}`);
+	socket.on("newUser", (data) => {
+		console.log("newUser!");
+		const check = users.find((user) => user.socketID == socket.id);
+		if (check == undefined) {
+			users.push({ ...data, socketID: socket.id });
+			console.log(`⚡: ${data.username}(${socket.id}) added to users list`);
+			socketIO.emit("newUserResponse", users);
+			console.log("newUser - users list: ", users);
+		}
 	});
-}
 
-main();
+	socket.on("disconnect", () => {
+		let user = users.find((user) => user.socketID == socket.id);
+		if (user == undefined) {
+			console.log(`🔥: socket ${socket.id}) disconnected`);
+		} else {
+			console.log(`🔥: user ${user.username} (${socket.id}) disconnected`);
+			users = users.filter((user) => user.socketID !== socket.id);
+			socketIO.emit("newUserResponse", users);
+			console.log("disconnect - users list: ", users);
+		}
+		socket.disconnect();
+	});
+});
+
+app.get("/api", (req, res) => {
+	res.json({ message: "Hello" });
+});
+
+http.listen(PORT, () => {
+	console.log(`Server listening on ${PORT}`);
+});
