@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setLoggedUser } from "../../redux/dataSlice";
 import { IoIosLogOut } from "react-icons/io";
 
-export default function Navbar() {
+export default function Navbar({ socket }) {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 	const loggedUser = useSelector((state) => state.data.loggedUser);
@@ -22,6 +22,7 @@ export default function Navbar() {
 							color="primary"
 							variant="contained"
 							onClick={() => {
+								socket.disconnect();
 								localStorage.clear("ChessGameUserName");
 								dispatch(setLoggedUser(null));
 								navigate("/");

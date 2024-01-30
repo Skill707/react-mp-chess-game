@@ -1,6 +1,7 @@
 import css from "./index.module.scss";
 import Field from "../Field";
 import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
 
 const playerTeam = "Black";
 let enemyTeam = "";
@@ -75,12 +76,18 @@ function getSideOfField2(side, item, array) {
 	return result;
 }
 
-export default function GameBoard({socket}) {
+export default function GameBoard({ socket }) {
 	console.log("GameBoard component rendered");
 
 	let fieldArray = useSelector((state) => state.data.fieldArray);
 	const selectedField = useSelector((state) => state.data.selectedBox);
 	const dispatch = useDispatch();
+
+	useEffect(() => {
+		socket.on("updateFieldArrayResponse", (data) => {
+			fieldArray = data;
+		});
+	}, [socket]);
 
 	if (selectedField) {
 		let sf = selectedField;
@@ -242,7 +249,7 @@ export default function GameBoard({socket}) {
 		<div className={w > h ? css.GameBoard : css.GameBoard2}>
 			{fieldArray &&
 				fieldArray.map((field) => {
-					return <Field fieldData={field} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;
+					return <Field fieldData={field} socket={socket} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;
 				})}
 		</div>
 	);

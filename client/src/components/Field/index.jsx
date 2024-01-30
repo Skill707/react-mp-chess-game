@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToStageArray, editFieldArray, select } from "../../redux/dataSlice";
 import Piece from "./../Piece/index";
 
-export default function Field({ fieldData }) {
+export default function Field({ fieldData, socket }) {
 	const selectedBox = useSelector((state) => state.data.selectedBox);
 	const fieldArray = useSelector((state) => state.data.fieldArray);
 	const dispatch = useDispatch();
@@ -33,6 +33,7 @@ export default function Field({ fieldData }) {
 						});
 						dispatch(select(null));
 						dispatch(editFieldArray(tempFieldArray));
+						socket.emit("updateFieldArray", tempFieldArray);
 					}
 				} else {
 					if (clicked.piece.team == playerTeam) dispatch(select(clicked));
@@ -55,6 +56,7 @@ export default function Field({ fieldData }) {
 							dispatch(select(null));
 							dispatch(addToStageArray(clicked));
 							dispatch(editFieldArray(tempFieldArray));
+							socket.emit("updateFieldArray", tempFieldArray);
 						}
 					}
 				}

@@ -2,32 +2,31 @@ import { Container } from "@mui/material";
 import css from "./index.module.scss";
 import GameBoard from "./../../components/GameBoard/index";
 import StageBoard from "./../../components/StageBoard/index";
-import socketIO from "socket.io-client";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ServersPage from "../ServersPage";
 import { useEffect } from "react";
+import Swal from "sweetalert2";
 
-export default function Game() {
+export default function Game({ socket }) {
 	const navigate = useNavigate();
 	const loggedUser = useSelector((state) => state.data.loggedUser);
 
 	useEffect(() => {
-		if (loggedUser == null) navigate("/");
-	}, []);
+		if (loggedUser == null) {
+			Swal.fire("Error: Username not setted!");
+			navigate("/");
+		} else {
+			socket.emit("checkNewUsername", { username: loggedUser });
+		}
 
-	if (loggedUser != null) {
-		var socket = socketIO.connect("https://chess-game-server.glitch.me"); 
-		// http://localhost:4000
-		// https://chess-game-server.glitch.me
-		socket.emit("checkNewUsername", { username: loggedUser });
-	}
-
-	useEffect(() => {
 		socket.on("checkNewUsernameResponse", (data) => {
 			console.log("🚀 ~ checkNewUsernameResponse: ", data);
-			if (data.accepted) {
+			if (data.accepted == true) {
 				socket.emit("newUser", { username: loggedUser });
+			} else {
+				Swal.fire("Username already used!");
+				navigate("/");
 			}
 		});
 	}, [socket]);
