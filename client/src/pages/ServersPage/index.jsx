@@ -1,4 +1,4 @@
-import { Button, Container } from "@mui/material";
+import { Button, ButtonBase, Container } from "@mui/material";
 import css from "./index.module.scss";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -9,15 +9,42 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setJoinedServerData, setPlayerTeam } from "../../redux/dataSlice";
+import Swal from "sweetalert2";
 
 export default function ServersPage({ socket }) {
-	const [users, setUsers] = useState(null);
+	const [serversArray, setServersArray] = useState(null);
+	const loggedUser = useSelector((state) => state.data.loggedUser);
+	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
 	useEffect(() => {
-		socket.on("newUserResponse", (data) => {
-			setUsers(data);
-			console.log("🚀 ~ socket.on ~ data:", data);
+		if (socket.connected) {
+			console.log("connected");
+		} else {
+			if (loggedUser == null) {
+				Swal.fire("Error: Username not setted!");
+				navigate("/");
+			} else {
+				socket.connect();
+				socket.emit("checkNewUsername", { username: loggedUser });
+			}
+		}
+
+		socket.on("checkNewUsernameResponse", (data) => {
+			console.log("🚀 ~ checkNewUsernameResponse: ", data);
+			if (data.accepted == true) {
+				socket.emit("newUser", { username: data.username });
+			} else {
+				Swal.fire("Username already used!");
+				navigate("/");
+			}
+		});
+
+		socket.emit("getServersArray");
+		socket.on("getServersArrayResponse", (data) => {
+			setServersArray(data);
 		});
 	}, [socket]);
 
@@ -28,23 +55,53 @@ export default function ServersPage({ socket }) {
 					<Table aria-label="simple table">
 						<TableHead>
 							<TableRow>
-								<TableCell>N#</TableCell>
-								<TableCell align="right">Name</TableCell>
-								<TableCell align="right">Action</TableCell>
+								<TableCell>Name</TableCell>
+								<TableCell align="right">Black team</TableCell>
+								<TableCell align="right">White team</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{users &&
-								users.map((row) => (
-									<TableRow key={row.socketID} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+							{serversArray &&
+								serversArray.map((server) => (
+									<TableRow key={server.name} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
 										<TableCell component="th" scope="row">
-											{row.socketID}
+											{server.name}
 										</TableCell>
-										<TableCell component="th" scope="row">
-											{row.username}
+										<TableCell component="th" scope="row" align="right">
+											{server.players[0] == undefined ? (
+												<Button
+													color="primary"
+													variant="contained"
+													onClick={() => {
+														socket.emit("joinToServer", { serverName: server.name, username: loggedUser, team: "Black" });
+														dispatch(setPlayerTeam("Black"));
+														dispatch(setJoinedServerData(server));
+														navigate("/game");
+													}}
+												>
+													Join
+												</Button>
+											) : (
+												server.players[0].username
+											)}
 										</TableCell>
-										<TableCell component="th" scope="row">
-											{row.username}
+										<TableCell component="th" scope="row" align="right">
+											{server.players[1] == undefined ? (
+												<Button
+													color="primary"
+													variant="contained"
+													onClick={() => {
+														socket.emit("joinToServer", { serverName: server.name, username: loggedUser, team: "White" });
+														dispatch(setPlayerTeam("White"));
+														dispatch(setJoinedServerData(server));
+														navigate("/game");
+													}}
+												>
+													Join
+												</Button>
+											) : (
+												server.players[1].username
+											)}
 										</TableCell>
 									</TableRow>
 								))}

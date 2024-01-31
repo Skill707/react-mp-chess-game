@@ -2,15 +2,11 @@ import css from "./index.module.scss";
 import Field from "../Field";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
-import { editFieldArray } from "../../redux/dataSlice";
-
-const playerTeam = "Black";
-let enemyTeam = "";
-if (playerTeam == "Black") enemyTeam = "White";
-else enemyTeam = "Black";
+import { editFieldArray, setCurrentTurn } from "../../redux/dataSlice";
+import InfoBar from "../InfoBar";
 
 function getSideOfField(side, item, array) {
-	let result;
+	let result = "none";
 	switch (side) {
 		case "t":
 			result = array.find((obj) => (obj.y == String(Number(item.y) + 1)) & (obj.ax == item.ax));
@@ -79,26 +75,26 @@ function getSideOfField2(side, item, array) {
 
 export default function GameBoard({ socket }) {
 	console.log("GameBoard component rendered");
+	const selectedBox = useSelector((state) => state.data.selectedBox);
+	const joinedServerData = useSelector((state) => state.data.joinedServerData);
+	let fieldArray = joinedServerData.fieldArray;
+	const currentTurn = joinedServerData.turn;
+	let playerTeam = currentTurn;
+	let enemyTeam = "";
+	if (playerTeam == "Black") enemyTeam = "White";
+	else if (playerTeam == "White") enemyTeam = "Black";
 
-	let fieldArray = useSelector((state) => state.data.fieldArray);
-	const selectedField = useSelector((state) => state.data.selectedBox);
 	const dispatch = useDispatch();
 
-	useEffect(() => {
-		socket.emit("getFieldArray");
-		socket.on("getFieldArrayResponse", (data) => {
-			dispatch(editFieldArray(data));
-		});
-		socket.on("updateFieldArrayResponse", (data) => {
-			dispatch(editFieldArray(data));
-		});
-	}, [socket]);
-
-	if (selectedField) {
-		let sf = selectedField;
+	if (selectedBox) {
+		let sf = selectedBox;
 		if (sf.piece.type == "Pawn") {
 			for (let index = 0; index < 2; index++) {
-				sf = getSideOfField("b", sf, fieldArray);
+				if (selectedBox.piece.team == "Black") {
+					sf = getSideOfField("b", sf, fieldArray);
+				} else {
+					sf = getSideOfField("t", sf, fieldArray);
+				}
 				if (sf == undefined) break;
 				else {
 					if (sf.piece == null) {
@@ -110,18 +106,52 @@ export default function GameBoard({ socket }) {
 						if (sf.piece.team == playerTeam) {
 							break;
 						} else if (sf.piece.team == enemyTeam) {
-							fieldArray = fieldArray.map((item) => {
-								if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
-								return item;
-							});
 							break;
 						}
 					}
 				}
 			}
+			sf = selectedBox;
+			if (selectedBox.piece.team == "Black") {
+				sf = getSideOfField("bl", sf, fieldArray);
+			} else {
+				sf = getSideOfField("tl", sf, fieldArray);
+			}
+			if (sf == undefined);
+			else {
+				if (sf.piece == null) {
+				} else {
+					if (sf.piece.team == playerTeam) {
+					} else if (sf.piece.team == enemyTeam) {
+						fieldArray = fieldArray.map((item) => {
+							if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
+							return item;
+						});
+					}
+				}
+			}
+			sf = selectedBox;
+			if (selectedBox.piece.team == "Black") {
+				sf = getSideOfField("br", sf, fieldArray);
+			} else {
+				sf = getSideOfField("tr", sf, fieldArray);
+			}
+			if (sf == undefined);
+			else {
+				if (sf.piece == null) {
+				} else {
+					if (sf.piece.team == playerTeam) {
+					} else if (sf.piece.team == enemyTeam) {
+						fieldArray = fieldArray.map((item) => {
+							if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
+							return item;
+						});
+					}
+				}
+			}
 		} else if (sf.piece.type == "Rook") {
 			["t", "b", "l", "r"].forEach((side) => {
-				sf = selectedField;
+				sf = selectedBox;
 				for (let index = 0; index < 8; index++) {
 					sf = getSideOfField(side, sf, fieldArray);
 					if (sf == undefined) break;
@@ -147,7 +177,7 @@ export default function GameBoard({ socket }) {
 			});
 		} else if (sf.piece.type == "Knight") {
 			["tl", "tr", "bl", "br", "lt", "lb", "rt", "rb"].forEach((side) => {
-				sf = selectedField;
+				sf = selectedBox;
 				sf = getSideOfField2(side, sf, fieldArray);
 				if (sf == undefined);
 				else {
@@ -168,7 +198,7 @@ export default function GameBoard({ socket }) {
 			});
 		} else if (sf.piece.type == "Bishop") {
 			["tl", "bl", "tr", "br"].forEach((side) => {
-				sf = selectedField;
+				sf = selectedBox;
 				for (let index = 0; index < 8; index++) {
 					sf = getSideOfField(side, sf, fieldArray);
 					if (sf == undefined) break;
@@ -194,7 +224,7 @@ export default function GameBoard({ socket }) {
 			});
 		} else if (sf.piece.type == "Queen") {
 			["t", "tl", "tr", "b", "bl", "br", "l", "r"].forEach((side) => {
-				sf = selectedField;
+				sf = selectedBox;
 				for (let index = 0; index < 8; index++) {
 					sf = getSideOfField(side, sf, fieldArray);
 					if (sf == undefined) break;
@@ -220,7 +250,7 @@ export default function GameBoard({ socket }) {
 			});
 		} else if (sf.piece.type == "King") {
 			["t", "tl", "tr", "b", "bl", "br", "l", "r"].forEach((side) => {
-				sf = selectedField;
+				sf = selectedBox;
 				for (let index = 0; index < 1; index++) {
 					sf = getSideOfField(side, sf, fieldArray);
 					if (sf == undefined) break;
@@ -251,11 +281,14 @@ export default function GameBoard({ socket }) {
 	const h = window.innerHeight;
 
 	return (
-		<div className={w > h ? css.GameBoard : css.GameBoard2}>
-			{fieldArray &&
-				fieldArray.map((field) => {
-					return <Field fieldData={field} socket={socket} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;
-				})}
-		</div>
+		<>
+			<InfoBar />
+			<div className={w > h ? css.GameBoard : css.GameBoard2}>
+				{fieldArray &&
+					fieldArray.map((field) => {
+						return <Field fieldData={field} socket={socket} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;
+					})}
+			</div>
+		</>
 	);
 }

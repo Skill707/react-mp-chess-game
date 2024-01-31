@@ -15,7 +15,7 @@ app.use(cors());
 
 let users = [];
 
-const defaultFieldArray= [
+const defaultFieldArray = [
 	{
 		x: "a",
 		ax: "1",
@@ -405,14 +405,29 @@ const defaultFieldArray= [
 		piece: { type: "Rook", team: "White" },
 	},
 ];
-let fieldArray = defaultFieldArray;
+
+let servers = [
+	{
+		name: "Server1",
+		turn: "White",
+		fieldArray: defaultFieldArray,
+		stageArray: [],
+		movesArray: [],
+		players: [],
+	},
+	{
+		name: "Server2",
+		turn: "White",
+		fieldArray: defaultFieldArray,
+		stageArray: [],
+		movesArray: [],
+		players: [],
+	},
+];
 
 socketIO.on("connection", (socket) => {
 	console.log(`⚡connection Request⚡: socket ${socket.id} just connected!`);
 
-	// socket.on("message", (data) => {
-	// 	socketIO.emit("messageResponse", data);
-	// });
 	// socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
 
 	socket.on("checkNewUsername", (data) => {
@@ -439,17 +454,66 @@ socketIO.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("getFieldArray", (data) => {
-		console.log("⚡getFieldArray Request⚡");
-		socketIO.emit("getFieldArrayResponse", fieldArray);
-		console.log(`⚡getFieldArray Response⚡: get FieldArray`);
+	socket.on("getServersArray", (data) => {
+		console.log("⚡getServersArray Request⚡");
+		socketIO.emit("getServersArrayResponse", servers);
+		console.log(`⚡getServersArray Response⚡: `);
 	});
 
-	socket.on("updateFieldArray", (data) => {
-		console.log("⚡updateFieldArray Request⚡");
-		fieldArray = data;
-		socketIO.emit("updateFieldArrayResponse", data);
-		console.log(`⚡updateFieldArray Response⚡: update FieldArray`);
+	socket.on("joinToServer", (data) => {
+		console.log("⚡joinToServer Request⚡");
+		let user = users.find((user) => user.username == data.username);
+		servers = servers.map((server) => {
+			if (server.name == data.serverName) {
+				server.players.push({ ...user, team: data.team });
+				console.log(`⚡joinToServer Response⚡: ${data.username} joined to ${server.name}`);
+			}
+			return server;
+		});
+		socketIO.emit("getServersArrayResponse", servers);
+	});
+
+	socket.on("getServerData", (data) => {
+		console.log("⚡getServerData Request⚡: ", data);
+		let server = servers.find((server) => server.name == data.serverName);
+		socketIO.emit("getServerDataResponse", server);
+		console.log(`⚡getServerData Response⚡: `, server);
+	});
+
+	socket.on("updateServerData", (data) => {
+		console.log("⚡updateServerData Request⚡", data);
+		servers = servers.map((server) => {
+			if (server.name == data.serverName) {
+				if (data.fieldArray != undefined) {
+					server.fieldArray = data.fieldArray;
+				}
+				if (data.stageArray != undefined) {
+					server.stageArray = [...server.stageArray, data.stageArray];
+				}
+				if (data.turn != undefined) {
+					server.turn = data.turn;
+				}
+				if (data.players != undefined) {
+					server.players = data.players;
+				}
+				socketIO.emit("getServerDataResponse", server);
+			}
+			return server;
+		});
+	});
+
+	socket.on("resetServerData", (data) => {
+		console.log("⚡resetServerData Request⚡", data);
+		servers = servers.map((server) => {
+			if (server.name == data.serverName) {
+				server.fieldArray = [...defaultFieldArray];
+				server.turn = "White";
+				server.stageArray = [];
+				server.movesArray = [];
+				socketIO.emit("getServerDataResponse", server);
+			}
+			return server;
+		});
 	});
 
 	socket.on("disconnect", () => {
@@ -459,7 +523,12 @@ socketIO.on("connection", (socket) => {
 			console.log(`⚡disconnect Response⚡: socket ${socket.id}) disconnected`);
 		} else {
 			users = users.filter((user) => user.socketID !== socket.id);
+			servers = servers.map((server) => {
+				return { ...server, players: server.players.filter((player) => player.socketID !== socket.id) };
+			});
 			socketIO.emit("newUserResponse", users);
+			socketIO.emit("getServersArrayResponse", servers);
+
 			console.log(`⚡disconnect Response⚡: user ${user.username}(${socket.id}) disconnected. Users list:`, users);
 		}
 		socket.disconnect();

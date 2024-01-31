@@ -2,7 +2,7 @@ import { Button, Container } from "@mui/material";
 import css from "./index.module.scss";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setLoggedUser } from "../../redux/dataSlice";
+import { setJoinedServerData, setLoggedUser } from "../../redux/dataSlice";
 import { IoIosLogOut } from "react-icons/io";
 
 export default function Navbar({ socket }) {
@@ -25,6 +25,7 @@ export default function Navbar({ socket }) {
 								socket.disconnect();
 								localStorage.clear("ChessGameUserName");
 								dispatch(setLoggedUser(null));
+								dispatch(setJoinedServerData(null));
 								navigate("/");
 							}}
 						>

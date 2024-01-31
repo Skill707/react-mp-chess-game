@@ -9,16 +9,17 @@ else enemyTeam = "Black";
 
 export default function StageBoard() {
 	console.log("StageBoard component rendered");
-
-	let stageArray = useSelector((state) => state.data.stageArray);
+	const joinedServerData = useSelector((state) => state.data.joinedServerData);
+	let stageArray = joinedServerData.stageArray;
 	const w = window.innerWidth;
 	const h = window.innerHeight;
 
 	return (
 		<div className={w > h ? css.StageBoard : css.StageBoard2}>
-			{stageArray.map((field) => {
-				return <Field fieldData={field} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;
-			})}
+			{stageArray &&
+				stageArray.map((field) => {
+					return <Field fieldData={field} key={`${field.x}-${field.y}-${field.piece.type}`} id={`${field.x}-${field.y}`} />;
+				})}
 		</div>
 	);
 }

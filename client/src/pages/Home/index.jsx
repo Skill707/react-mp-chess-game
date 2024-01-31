@@ -11,7 +11,7 @@ const validationSchema = yup.object({
 	username: yup.string("Enter your username").required("Username is required"),
 });
 
-export default function Home() {
+export default function Home({ socket }) {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 
@@ -22,11 +22,24 @@ export default function Home() {
 		validationSchema: validationSchema,
 		onSubmit: (values, action) => {
 			action.resetForm();
-			localStorage.setItem("ChessGameUserName", JSON.stringify(values.username));
-			dispatch(setLoggedUser(values.username));
-			navigate("/game");
+			socket.connect();
+			socket.emit("checkNewUsername", { username: values.username });
 		},
 	});
+
+	useEffect(() => {
+		socket.on("checkNewUsernameResponse", (data) => {
+			console.log("🚀 ~ checkNewUsernameResponse: ", data);
+			if (data.accepted == true) {
+				localStorage.setItem("ChessGameUserName", JSON.stringify(data.username));
+				dispatch(setLoggedUser(data.username));
+				socket.emit("newUser", { username: data.username });
+				navigate("/servers");
+			} else {
+				Swal.fire("Username already used!");
+			}
+		});
+	}, [socket]);
 
 	return (
 		<section>

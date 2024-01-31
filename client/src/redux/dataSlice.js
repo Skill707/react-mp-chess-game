@@ -15,26 +15,36 @@ export const dataSlice = createSlice({
 	name: "data",
 	initialState: {
 		loggedUser: GetUserFromLS(),
-		fieldArray: null,
-		stageArray: [],
 		selectedBox: null,
+		playerTeam: "null",
+		joinedServerData: null,
 	},
 	reducers: {
-		editFieldArray: (state, action) => {
-			state.fieldArray = action.payload;
+		setLoggedUser: (state, action) => {
+			state.loggedUser = action.payload;
 		},
-		addToStageArray: (state, action) => {
-			state.stageArray = [...state.stageArray, action.payload];
+		setPlayerTeam: (state, action) => {
+			state.playerTeam = action.payload;
 		},
 		select: (state, action) => {
 			state.selectedBox = action.payload;
 		},
-		setLoggedUser: (state, action) => {
-			state.loggedUser = action.payload;
+		setJoinedServerData: (state, action) => {
+			state.joinedServerData = action.payload;
+		},
+		editFieldArray: (state, action) => {
+			state.joinedServerData = { ...state.joinedServerData, fieldArray: action.payload };
+		},
+		addToStageArray: (state, action) => {
+			let { stageArray } = state.joinedServerData;
+			state.joinedServerData = { ...state.joinedServerData, stageArray: [...stageArray, action.payload] };
+		},
+		setCurrentTurn: (state, action) => {
+			state.joinedServerData = { ...state.joinedServerData, turn: action.payload };
 		},
 	},
 });
 
-export const { select, editFieldArray, addToStageArray, setLoggedUser } = dataSlice.actions;
+export const { select, editFieldArray, addToStageArray, setLoggedUser, setCurrentTurn, setJoinedServerData, setPlayerTeam } = dataSlice.actions;
 
 export default dataSlice.reducer;

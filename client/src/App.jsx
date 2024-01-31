@@ -4,17 +4,14 @@ import Navbar from "./components/Navbar";
 import Game from "./pages/Game/index";
 import socketIO from "socket.io-client";
 import { useSelector } from "react-redux";
+import ServersPage from "./pages/ServersPage";
 
 export default function App() {
 	console.log("App rendered");
 
-	const loggedUser = useSelector((state) => state.data.loggedUser);
-
-	if (loggedUser != null) {
-		var socket = socketIO.connect("https://chess-game-server.glitch.me");
-		// http://localhost:4000
-		// https://chess-game-server.glitch.me
-	}
+	const socket = socketIO("https://chess-game-server.glitch.me", { autoConnect: false });
+	// http://localhost:4000
+	// https://chess-game-server.glitch.me
 
 	const router = createBrowserRouter([
 		{
@@ -28,7 +25,11 @@ export default function App() {
 			children: [
 				{
 					index: true,
-					element: <Home />,
+					element: <Home socket={socket} />,
+				},
+				{
+					path: "servers",
+					element: <ServersPage socket={socket} />,
 				},
 				{
 					path: "game",
