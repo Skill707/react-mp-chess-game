@@ -68,7 +68,7 @@ export default function ServersPage({ socket }) {
 											{server.name}
 										</TableCell>
 										<TableCell component="th" scope="row" align="right">
-											{server.players[0] == undefined ? (
+											{server.players.find((player) => player.team == "Black") == undefined ? (
 												<Button
 													color="primary"
 													variant="contained"
@@ -82,11 +82,11 @@ export default function ServersPage({ socket }) {
 													Join
 												</Button>
 											) : (
-												server.players[0].username
+												server.players.find((player) => player.team == "Black").username
 											)}
 										</TableCell>
 										<TableCell component="th" scope="row" align="right">
-											{server.players[1] == undefined ? (
+											{server.players.find((player) => player.team == "White") == undefined ? (
 												<Button
 													color="primary"
 													variant="contained"
@@ -100,7 +100,7 @@ export default function ServersPage({ socket }) {
 													Join
 												</Button>
 											) : (
-												server.players[1].username
+												server.players.find((player) => player.team == "White").username
 											)}
 										</TableCell>
 									</TableRow>
