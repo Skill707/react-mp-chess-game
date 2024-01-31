@@ -1,20 +1,68 @@
-.Navbar{
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    height: 40px;
-    border-bottom: 1px solid gray;
+@media screen and (orientation: portrait) {
+    .Navbar {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        border-bottom: 1px solid gray;
+        text-align: center;
 
-    div:first-child{
+        div:first-child {
+            margin: auto;
 
-    }
-
-    div:nth-child(2){
-        a{
-            margin-right: 20px;
-            color: black;
-            text-decoration: none;
+            h2 {
+                margin: 0;
+            }
         }
-    }
 
+        div:nth-child(2) {
+            margin: auto;
+
+            a {
+                margin-right: 20px;
+                color: black;
+                text-decoration: none;
+            }
+        }
+
+        div:nth-child(3) {
+            margin: auto;
+
+        }
+
+    }
+}
+
+@media screen and (orientation: landscape) {
+    .Navbar {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
+
+        div:first-child {}
+
+        div:nth-child(2) {
+            a {
+                margin-right: 20px;
+                color: black;
+                text-decoration: none;
+            }
+        }
+
+        div:nth-child(3) {}
+
+    }
+}
+
+.InfoBar {
+    margin-top: 20px;
+    border: 1px solid gray;
+    border-radius: 10px;
+    padding: 10px;
+
+    p {
+        margin: 0;
+    }
 }

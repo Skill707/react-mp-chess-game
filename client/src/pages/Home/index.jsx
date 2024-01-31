@@ -14,6 +14,7 @@ const validationSchema = yup.object({
 export default function Home({ socket }) {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
+	const loggedUser = useSelector((state) => state.data.loggedUser);
 
 	const formik = useFormik({
 		initialValues: {
@@ -28,6 +29,11 @@ export default function Home({ socket }) {
 	});
 
 	useEffect(() => {
+
+		if (loggedUser != null) {
+			navigate("/servers")
+		}
+
 		socket.on("checkNewUsernameResponse", (data) => {
 			console.log("🚀 ~ checkNewUsernameResponse: ", data);
 			if (data.accepted == true) {

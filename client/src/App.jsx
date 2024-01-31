@@ -8,7 +8,7 @@ import ServersPage from "./pages/ServersPage";
 export default function App() {
 	console.log("App rendered");
 
-	const socket = socketIO("https://chess-game-server.glitch.me", { autoConnect: false });
+	const socket = socketIO("http://localhost:4000", { autoConnect: false });
 	// http://localhost:4000
 	// https://chess-game-server.glitch.me
 
@@ -16,10 +16,10 @@ export default function App() {
 		{
 			path: "/",
 			element: (
-				<>
+				<div className="orientation">
 					<Navbar socket={socket} />
 					<Outlet />
-				</>
+				</div>
 			),
 			children: [
 				{

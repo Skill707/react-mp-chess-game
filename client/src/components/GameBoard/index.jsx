@@ -1,9 +1,6 @@
 import css from "./index.module.scss";
 import Field from "../Field";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { editFieldArray, setCurrentTurn } from "../../redux/dataSlice";
-import InfoBar from "../InfoBar";
 
 function getSideOfField(side, item, array) {
 	let result = "none";
@@ -277,13 +274,9 @@ export default function GameBoard({ socket }) {
 		}
 	}
 
-	const w = window.innerWidth;
-	const h = window.innerHeight;
-
 	return (
 		<>
-			<InfoBar />
-			<div className={w > h ? css.GameBoard : css.GameBoard2}>
+			<div className={css.GameBoard}>
 				{fieldArray &&
 					fieldArray.map((field) => {
 						return <Field fieldData={field} socket={socket} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;

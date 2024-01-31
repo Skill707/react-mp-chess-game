@@ -1,16 +1,19 @@
-.GameBoard {
-    display: flex;
-    flex-wrap: wrap;
-    height: calc(100dvh - 80px);
-    aspect-ratio: 1;
-    border: 1px solid black;
-
+@media screen and (orientation: portrait) {
+    .GameBoard {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        aspect-ratio: 1;
+        border: 1px solid black;
+    }
 }
 
-.GameBoard2 {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    aspect-ratio: 1;
-    border: 1px solid black;
+@media screen and (orientation: landscape) {
+    .GameBoard {
+        display: flex;
+        flex-wrap: wrap;
+        height: calc(100dvh);
+        aspect-ratio: 1;
+        border: 1px solid black;
+    }
 }

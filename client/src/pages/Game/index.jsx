@@ -15,11 +15,16 @@ export default function Game({ socket }) {
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
 
 	useEffect(() => {
-		if (socket.connected & (joinedServerData != null)) {
-			socket.emit("getServerData", { serverName: joinedServerData.name });
+		if (loggedUser == null) {
+			Swal.fire("Error: Username not setted!");
+			navigate("/");
 		} else {
-			Swal.fire(`Error: Server not found! connected: ${socket.connected}`);
-			navigate("/servers");
+			if (socket.connected & (joinedServerData != null)) {
+				socket.emit("getServerData", { serverName: joinedServerData.name });
+			} else {
+				Swal.fire(`Error: Server not found! connected: ${socket.connected} joinedServerData: ${joinedServerData}`);
+				navigate("/servers");
+			}
 		}
 
 		socket.on("getServerDataResponse", (data) => {

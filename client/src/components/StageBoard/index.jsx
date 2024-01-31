@@ -15,7 +15,7 @@ export default function StageBoard() {
 	const h = window.innerHeight;
 
 	return (
-		<div className={w > h ? css.StageBoard : css.StageBoard2}>
+		<div className={css.StageBoard}>
 			{stageArray &&
 				stageArray.map((field) => {
 					return <Field fieldData={field} key={`${field.x}-${field.y}-${field.piece.type}`} id={`${field.x}-${field.y}`} />;
