@@ -434,10 +434,10 @@ socketIO.on("connection", (socket) => {
 		console.log("⚡checkNewUsername Request⚡");
 		const check = users.find((user) => user.username == data.username);
 		if (check == undefined) {
-			socketIO.emit("checkNewUsernameResponse", { username: data.username, accepted: true });
+			socketIO.to(socket.id).emit("checkNewUsernameResponse", { username: data.username, accepted: true });
 			console.log(`⚡checkNewUsername Response⚡: username ${data.username} accepted`);
 		} else {
-			socketIO.emit("checkNewUsernameResponse", { username: data.username, accepted: false });
+			socketIO.to(socket.id).emit("checkNewUsernameResponse", { username: data.username, accepted: false });
 			console.log(`⚡checkNewUsername Response⚡: username ${data.username} rejected`);
 		}
 	});

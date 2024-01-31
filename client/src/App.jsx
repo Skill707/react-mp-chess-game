@@ -3,7 +3,6 @@ import Home from "./pages/Home/index";
 import Navbar from "./components/Navbar";
 import Game from "./pages/Game/index";
 import socketIO from "socket.io-client";
-import { useSelector } from "react-redux";
 import ServersPage from "./pages/ServersPage";
 
 export default function App() {

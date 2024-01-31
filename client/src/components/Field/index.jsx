@@ -17,8 +17,7 @@ export default function Field({ fieldData, socket }) {
 	const dispatch = useDispatch();
 
 	function HandleClick(clicked) {
-		if (true) {
-			// playerTeam == currentTurn
+		if (playerTeam == currentTurn) {
 			console.log("HandleClick ~ selectedBox: ", selectedBox, "clicked: ", clicked);
 			let tempFieldArray = [...fieldArray];
 
