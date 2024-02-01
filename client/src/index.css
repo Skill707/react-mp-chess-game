@@ -9,20 +9,17 @@ body {
 	padding: 0;
 }
 
-@media screen and (min-width: portrait) {
+@media screen and (max-width: calc(100dvh + 250px)) {
 	.orientation {
 		display: flex;
 		flex-direction: column;
-		height: 100dvh;
 	}
 }
 
-@media screen and (orientation: landscape) {
+@media screen and (min-width: calc(100dvh + 250px)) {
 	.orientation {
 		display: flex;
 		flex-direction: row;
-		flex-wrap: wrap;
-		height: 100dvh;
 		justify-content: center;
 	}
 }

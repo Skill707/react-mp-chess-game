@@ -51,8 +51,8 @@ export default function ServersPage({ socket }) {
 	return (
 		<section>
 			<Container>
-				<h2>Servers: </h2>
 				<TableContainer component={Paper} sx={{ minWidth: 250, maxWidth: 500, margin: "0 auto" }}>
+					<h2>Servers: </h2>
 					<Table aria-label="simple table">
 						<TableHead>
 							<TableRow>

@@ -18,6 +18,7 @@ export const dataSlice = createSlice({
 		selectedBox: null,
 		playerTeam: "null",
 		joinedServerData: null,
+		orientation: null,
 	},
 	reducers: {
 		setLoggedUser: (state, action) => {
@@ -42,9 +43,12 @@ export const dataSlice = createSlice({
 		setCurrentTurn: (state, action) => {
 			state.joinedServerData = { ...state.joinedServerData, turn: action.payload };
 		},
+		setOrientation: (state, action) => {
+			state.orientation = action.payload;
+		},
 	},
 });
 
-export const { select, editFieldArray, addToStageArray, setLoggedUser, setCurrentTurn, setJoinedServerData, setPlayerTeam } = dataSlice.actions;
+export const { select, editFieldArray, addToStageArray, setLoggedUser, setCurrentTurn, setJoinedServerData, setPlayerTeam, setOrientation } = dataSlice.actions;
 
 export default dataSlice.reducer;

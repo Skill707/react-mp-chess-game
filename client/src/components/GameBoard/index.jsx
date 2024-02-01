@@ -73,10 +73,10 @@ function getSideOfField2(side, item, array) {
 export default function GameBoard({ socket }) {
 	console.log("GameBoard component rendered");
 	const selectedBox = useSelector((state) => state.data.selectedBox);
+	const playerTeam = useSelector((state) => state.data.playerTeam);
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
 	let fieldArray = joinedServerData.fieldArray;
 	const currentTurn = joinedServerData.turn;
-	let playerTeam = currentTurn;
 	let enemyTeam = "";
 	if (playerTeam == "Black") enemyTeam = "White";
 	else if (playerTeam == "White") enemyTeam = "Black";
@@ -276,7 +276,7 @@ export default function GameBoard({ socket }) {
 
 	return (
 		<>
-			<div className={css.GameBoard}>
+			<div className={css.GameBoard} style={playerTeam == "Black" ? { rotate: "180deg" } : { rotate: "0deg" }}>
 				{fieldArray &&
 					fieldArray.map((field) => {
 						return <Field fieldData={field} socket={socket} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;

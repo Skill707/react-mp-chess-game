@@ -1,4 +1,4 @@
-@media screen and (orientation: portrait) {
+@media screen and (max-width: calc(100dvh + 250px)) {
     .GameBoard {
         display: flex;
         flex-wrap: wrap;
@@ -8,8 +8,9 @@
     }
 }
 
-@media screen and (orientation: landscape) {
+@media screen and (min-width: calc(100dvh + 250px)) {
     .GameBoard {
+        
         display: flex;
         flex-wrap: wrap;
         height: calc(100dvh);

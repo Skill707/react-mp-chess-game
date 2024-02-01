@@ -91,8 +91,12 @@ export default function Field({ fieldData, socket }) {
 	let border = "";
 	if (selectedBox == fieldData) border = "1px solid red";
 
+	let rotate = "0deg";
+	if (playerTeam == "Black") rotate = "180deg";
+	else rotate = "0deg";
+
 	return (
-		<div style={{ backgroundColor: color, border: border }} className={css.Field} key={`${fieldData.x}-${fieldData.y}`} onClick={() => HandleClick(fieldData)}>
+		<div style={{ backgroundColor: color, border: border, rotate: rotate }} className={css.Field} key={`${fieldData.x}-${fieldData.y}`} onClick={() => HandleClick(fieldData)}>
 			{fieldData?.kill ? <div className={css.kill}></div> : null}
 			<p>{`${fieldData.x}-${fieldData.y}`}</p>
 			{fieldData.piece ? <Piece piece={fieldData.piece} /> : null}

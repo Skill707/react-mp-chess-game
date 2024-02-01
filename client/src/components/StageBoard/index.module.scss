@@ -1,28 +1,5 @@
-.StageBoard {
-    background-color: coral;
-    border: 1px solid black;
-    display: flex;
-    flex-wrap: wrap;
-    width: calc(100dvh - 80px);
 
-    div {
-        background-color: transparent !important;
-    }
-}
-
-.StageBoard2 {
-    background-color: coral;
-    border: 1px solid black;
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-
-    div {
-        background-color: transparent !important;
-    }
-}
-
-@media screen and (orientation: portrait) {
+@media screen and (max-width: calc(100dvh + 250px)) {
     .StageBoard {
         background-color: coral;
         border: 1px solid black;
@@ -36,7 +13,7 @@
     }
 }
 
-@media screen and (orientation: landscape) {
+@media screen and (min-width: calc(100dvh + 250px)) {
     .StageBoard {
         background-color: coral;
         border: 1px solid black;

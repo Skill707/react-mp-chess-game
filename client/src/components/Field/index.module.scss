@@ -1,18 +1,3 @@
-@function color-contrast($color1, $color2: #fff, $dark-color: #000, $lightness: 43%) {
-  // Извлекаем светлоту цветов
-  $l1: lightness($color1);
-  $l2: lightness($color2);
-
-  // Подбираем контрастный цвет
-  @if abs($l1 - $l2)>$lightness {
-    @return $dark-color;
-  }
-
-  @else {
-    @return $light-color;
-  }
-}
-
 .Field {
   width: 12.5%;
   height: 12.5%;

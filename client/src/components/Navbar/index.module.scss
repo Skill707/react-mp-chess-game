@@ -1,4 +1,4 @@
-@media screen and (orientation: portrait) {
+@media screen and (max-width: calc(100dvh + 250px)) {
     .Navbar {
         display: flex !important;
         align-items: center;
@@ -33,13 +33,14 @@
     }
 }
 
-@media screen and (orientation: landscape) {
+@media screen and (min-width: calc(100dvh + 250px)) {
     .Navbar {
         display: flex !important;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         padding: 0 !important;
+        width: 200px !important;
 
         div:first-child {}
 
