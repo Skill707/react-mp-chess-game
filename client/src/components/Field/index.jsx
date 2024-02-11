@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToStageArray, editFieldArray, select, setCurrentTurn } from "../../redux/dataSlice";
 import Piece from "./../Piece/index";
 
-export default function Field({ fieldData, socket }) {
+export default function Field({ fieldData, socket, playerTeam }) {
 	const selectedBox = useSelector((state) => state.data.selectedBox);
-	const playerTeam = useSelector((state) => state.data.playerTeam);
-
+	// const playerTeam = useSelector((state) => state.data.playerTeam);
+	const loggedUser = useSelector((state) => state.data.loggedUser);
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
 	let fieldArray = joinedServerData.fieldArray;
 	const currentTurn = joinedServerData.turn;
@@ -35,14 +35,22 @@ export default function Field({ fieldData, socket }) {
 									} else {
 										item = { ...clicked, piece: piece, path: false };
 									}
+									socket.emit("message", {
+										username: loggedUser,
+										text: `${first.x}-${first.y} to ${clicked.x}-${clicked.y}.`,
+										id: `${socket.id}-${Date.now()}`,
+										date: Date.now(),
+										serverName: joinedServerData.name,
+									});
 								}
 								if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
+
 								return item;
 							});
 							dispatch(select(null));
 							dispatch(editFieldArray(tempFieldArray));
 							dispatch(setCurrentTurn(nextTurn));
-							socket.emit("updateServerData", { serverName: joinedServerData.name, fieldArray: tempFieldArray, turn: nextTurn });
+							socket.emit("updateServerData", { username: loggedUser, serverName: joinedServerData.name, fieldArray: tempFieldArray, turn: nextTurn });
 						}
 					} else {
 						if (clicked.piece.team == currentTurn) dispatch(select(clicked));
@@ -58,6 +66,13 @@ export default function Field({ fieldData, socket }) {
 										} else {
 											item = { ...clicked, piece: piece, kill: false };
 										}
+										socket.emit("message", {
+											username: loggedUser,
+											text: `${first.x}-${first.y} to ${clicked.x}-${clicked.y}. ${clicked.piece.type} down.`,
+											id: `${socket.id}-${Date.now()}`,
+											date: Date.now(),
+											serverName: joinedServerData.name,
+										});
 									}
 									if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
 									return item;
@@ -66,7 +81,7 @@ export default function Field({ fieldData, socket }) {
 								dispatch(addToStageArray(clicked));
 								dispatch(editFieldArray(tempFieldArray));
 								dispatch(setCurrentTurn(nextTurn));
-								socket.emit("updateServerData", { serverName: joinedServerData.name, fieldArray: tempFieldArray, stageArray: clicked, turn: nextTurn });
+								socket.emit("updateServerData", { username: loggedUser, serverName: joinedServerData.name, fieldArray: tempFieldArray, stageArray: clicked, turn: nextTurn });
 							}
 						}
 					}
@@ -96,9 +111,9 @@ export default function Field({ fieldData, socket }) {
 	else rotate = "0deg";
 
 	return (
-		<div style={{ backgroundColor: color, border: border, rotate: rotate }} className={css.Field} key={`${fieldData.x}-${fieldData.y}`} onClick={() => HandleClick(fieldData)}>
+		<div style={{ border: border, rotate: rotate }} className={css.Field} key={`${fieldData.x}-${fieldData.y}`} onClick={() => HandleClick(fieldData)}>
 			{fieldData?.kill ? <div className={css.kill}></div> : null}
-			<p>{`${fieldData.x}-${fieldData.y}`}</p>
+			{/* <p>{`${fieldData.x}-${fieldData.y}`}</p> */}
 			{fieldData.piece ? <Piece piece={fieldData.piece} /> : null}
 			{fieldData?.path ? <div className={css.path}></div> : null}
 		</div>

@@ -275,13 +275,43 @@ export default function GameBoard({ socket }) {
 	}
 
 	return (
-		<>
-			<div className={css.GameBoard} style={playerTeam == "Black" ? { rotate: "180deg" } : { rotate: "0deg" }}>
-				{fieldArray &&
-					fieldArray.map((field) => {
-						return <Field fieldData={field} socket={socket} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;
+		<div id="GameBoard" className={css.GameBoard} style={playerTeam == "Black" ? { rotate: "180deg" } : { rotate: "0deg" }}>
+			<div className={css.Top}>
+				<div className={css.EmptyBox}></div>
+				<div className={css.LetterBar}>
+					{["A", "B", "C", "D", "E", "F", "G", "H"].map((item) => {
+						return <div style={{ rotate: "180deg" }}>{item}</div>;
 					})}
+				</div>
+				<div className={css.EmptyBox}></div>
 			</div>
-		</>
+			<div className={css.Middle}>
+				<div className={css.NumberBar}>
+					{["8", "7", "6", "5", "4", "3", "2", "1"].map((item) => {
+						return <div >{item}</div>;
+					})}
+				</div>
+				<div className={css.Board}>
+					{fieldArray &&
+						fieldArray.map((field) => {
+							return <Field playerTeam={playerTeam} fieldData={field} socket={socket} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;
+						})}
+				</div>
+				<div className={css.NumberBar}>
+					{["8", "7", "6", "5", "4", "3", "2", "1"].map((item) => {
+						return <div style={{ rotate: "180deg" }}>{item}</div>;
+					})}
+				</div>
+			</div>
+			<div className={css.Bottom}>
+				<div className={css.EmptyBox}></div>
+				<div className={css.LetterBar}>
+					{["A", "B", "C", "D", "E", "F", "G", "H"].map((item) => {
+						return <div>{item}</div>;
+					})}
+				</div>
+				<div className={css.EmptyBox}></div>
+			</div>
+		</div>
 	);
 }

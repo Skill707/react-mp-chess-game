@@ -1,28 +1,11 @@
+.StageBoard {
 
-@media screen and (max-width: calc(100dvh + 250px)) {
-    .StageBoard {
-        background-color: coral;
-        border: 1px solid black;
-        display: flex;
-        flex-wrap: wrap;
-        width: 100%;
-
-        div {
-            background-color: transparent !important;
-        }
-    }
-}
-
-@media screen and (min-width: calc(100dvh + 250px)) {
-    .StageBoard {
-        background-color: coral;
-        border: 1px solid black;
-        display: flex;
-        flex-wrap: wrap;
-        width: 100dvh;
-
-        div {
-            background-color: transparent !important;
-        }
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    background-color: coral;
+    border-radius: 4px;
+    div {
+        background-color: transparent !important;
     }
 }

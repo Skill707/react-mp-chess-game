@@ -1,0 +1,47 @@
+.GameInfo {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ButtonsBar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.InfoBar {
+    border: 1px solid rgba(128, 128, 128, 0.479);
+    border-radius: 4px;
+    padding: 8px;
+    height: 20%;
+
+    h3 {
+        margin: 0;
+    }
+}
+
+.OponentInfoBar {
+    border: 1px solid rgba(128, 128, 128, 0.479);
+    border-radius: 4px;
+    padding: 8px;
+    height: 40%;
+
+    h3 {
+        margin: 0 0 8px 0;
+    }
+}
+
+.PlayerInfoBar {
+    border: 1px solid rgba(128, 128, 128, 0.479);
+    border-radius: 4px;
+    padding: 8px;
+    height: 40%;
+
+    h3 {
+        margin: 0 0 8px 0;
+    }
+}

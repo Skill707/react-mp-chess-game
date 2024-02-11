@@ -412,7 +412,7 @@ let servers = [
 		turn: "White",
 		fieldArray: defaultFieldArray,
 		stageArray: [],
-		movesArray: [],
+		messagesArray: [],
 		players: [],
 	},
 	{
@@ -420,7 +420,7 @@ let servers = [
 		turn: "White",
 		fieldArray: defaultFieldArray,
 		stageArray: [],
-		movesArray: [],
+		messagesArray: [],
 		players: [],
 	},
 	{
@@ -428,7 +428,7 @@ let servers = [
 		turn: "White",
 		fieldArray: defaultFieldArray,
 		stageArray: [],
-		movesArray: [],
+		messagesArray: [],
 		players: [],
 	},
 	{
@@ -436,7 +436,7 @@ let servers = [
 		turn: "White",
 		fieldArray: defaultFieldArray,
 		stageArray: [],
-		movesArray: [],
+		messagesArray: [],
 		players: [],
 	},
 	{
@@ -444,7 +444,7 @@ let servers = [
 		turn: "White",
 		fieldArray: defaultFieldArray,
 		stageArray: [],
-		movesArray: [],
+		messagesArray: [],
 		players: [],
 	},
 ];
@@ -452,40 +452,54 @@ let servers = [
 console.log("restart");
 
 socketIO.on("connection", (socket) => {
-	console.log(`⚡connection Request⚡: socket ${socket.id} just connected!`);
+	console.log(`⚡: socket ${socket.id} just connected!`);
 
-	socket.on("checkNewUsername", (data) => {
-		console.log("⚡checkNewUsername Request⚡");
-		const check = users.find((user) => user.username == data.username);
-		if (check == undefined) {
-			socketIO.to(socket.id).emit("checkNewUsernameResponse", { username: data.username, accepted: true });
-			console.log(`⚡checkNewUsername Response⚡: username ${data.username} accepted`);
+	socket.on("newUser", (data) => {
+		console.log(`⚡newUser Request by socket ${socket.id} with username: ${data.username}`);
+		const checkUserSocket = users.find((user) => user.socketID == socket.id);
+		if (checkUserSocket == undefined) {
+			const checkUserName = users.find((user) => user.username == data.username);
+			if (checkUserName == undefined) {
+				users.push({ ...data, socketID: socket.id });
+				socketIO.to(socket.id).emit("newUserResponse", { username: data.username, accepted: true });
+				// socketIO.emit("newUserResponse", users);
+				console.log(`⚡newUser Response⚡: user ${data.username}(${socket.id}) added to users list. Users list: users<Array>`);
+			} else {
+				socketIO.to(socket.id).emit("newUserResponse", { username: data.username, accepted: false });
+				console.log(`⚡newUser Response⚡: username ${data.username} already used by socket ${checkUserName.socketID}`);
+			}
 		} else {
-			socketIO.to(socket.id).emit("checkNewUsernameResponse", { username: data.username, accepted: false });
-			console.log(`⚡checkNewUsername Response⚡: username ${data.username} rejected`);
+			socketIO.to(socket.id).emit("newUserResponse", { username: data.username, accepted: false });
+			console.log(`⚡newUser Response⚡: socket ${socket.id} already used by user ${checkUserSocket.username}`);
 		}
 	});
 
-	socket.on("newUser", (data) => {
-		console.log("⚡newUser Request⚡");
-		const check = users.find((user) => user.socketID == socket.id);
-		if (check == undefined) {
-			users.push({ ...data, socketID: socket.id });
-			socketIO.emit("newUserResponse", users);
-			console.log(`⚡checkNewUsername Response⚡: user ${data.username}(${socket.id}) added to users list`, users);
+	socket.on("oldUser", (data) => {
+		console.log(`⚡oldUser Request by socket ${socket.id} with username: ${data.username}`);
+		const checkUserSocket = users.find((user) => user.socketID == socket.id);
+		if (checkUserSocket == undefined) {
+			const checkUserName = users.find((user) => user.username == data.username);
+			if (checkUserName == undefined) {
+				users.push({ ...data, socketID: socket.id });
+				socketIO.to(socket.id).emit("oldUserResponse", { username: data.username, accepted: true });
+				// socketIO.emit("newUserResponse", users);
+				console.log(`⚡oldUser Response⚡: user ${data.username}(${socket.id}) added to users list. Users list: users<Array>`);
+			} else {
+				socketIO.to(socket.id).emit("oldUserResponse", { username: data.username, accepted: false });
+				console.log(`⚡oldUser Response⚡: username ${data.username} already used by socket ${checkUserName.socketID}`);
+			}
 		} else {
-			console.log(`⚡checkNewUsername Response⚡: user ${data.username}(${socket.id}) already exist. Users list`, users);
+			socketIO.to(socket.id).emit("oldUserResponse", { username: data.username, accepted: false });
+			console.log(`⚡oldUser Response⚡: socket ${socket.id} already used by user ${checkUserSocket.username}`);
 		}
 	});
 
 	socket.on("getServersArray", (data) => {
-		console.log("⚡getServersArray Request⚡");
-		socketIO.emit("getServersArrayResponse", servers);
-		console.log(`⚡getServersArray Response⚡: `);
+		console.log(`⚡getServersArray Request by ${data.username}(${socket.id})`);
+		socketIO.to(socket.id).emit("getServersArrayResponse", servers);
 	});
 
 	socket.on("joinToServer", (data) => {
-		console.log("⚡joinToServer Request⚡");
 		let user = users.find((user) => user.username == data.username);
 		servers = servers.map((server) => {
 			if (server.name == data.serverName) {
@@ -493,6 +507,15 @@ socketIO.on("connection", (socket) => {
 				console.log(`⚡joinToServer Response⚡: ${data.username} joined to ${server.name}`);
 				server.players.map((player) => {
 					socketIO.to(player.socketID).emit("getServerDataResponse", server);
+					let msg = {
+						username: "Server",
+						text: `${data.username} join to room`,
+						id: `${socket.id}-${Date.now()}`,
+						date: Date.now(),
+						serverName: server.name,
+					};
+					server.messagesArray.push(msg);
+					socketIO.to(player.socketID).emit("messageResponse", msg);
 				});
 			}
 			return server;
@@ -501,13 +524,21 @@ socketIO.on("connection", (socket) => {
 	});
 
 	socket.on("LeaveFromServer", (data) => {
-		console.log("⚡LeaveFromServer Request⚡");
 		servers = servers.map((server) => {
 			if (server.name == data.serverName) {
 				server = { ...server, players: server.players.filter((player) => player.socketID !== socket.id) };
 				console.log(`⚡LeaveFromServer Response⚡: ${data.username} leave from ${server.name}`);
 				server.players.map((player) => {
 					socketIO.to(player.socketID).emit("getServerDataResponse", server);
+					let msg = {
+						username: "Server",
+						text: `${data.username} leave room`,
+						id: `${socket.id}-${Date.now()}`,
+						date: Date.now(),
+						serverName: server.name,
+					};
+					server.messagesArray.push(msg);
+					socketIO.to(player.socketID).emit("messageResponse", msg);
 				});
 			}
 			return server;
@@ -516,14 +547,13 @@ socketIO.on("connection", (socket) => {
 	});
 
 	socket.on("getServerData", (data) => {
-		console.log("⚡getServerData Request⚡: ", data);
+		console.log(`⚡getServerData Request by ${data.username} of server ${data.serverName}`);
 		let server = servers.find((server) => server.name == data.serverName);
 		socketIO.to(socket.id).emit("getServerDataResponse", server);
-		console.log(`⚡getServerData Response⚡: `, server);
 	});
 
 	socket.on("updateServerData", (data) => {
-		console.log("⚡updateServerData Request⚡", data);
+		console.log(`⚡updateServerData Request by ${data.username} of server ${data.serverName}`);
 		servers = servers.map((server) => {
 			if (server.name == data.serverName) {
 				if (data.fieldArray != undefined) {
@@ -546,14 +576,39 @@ socketIO.on("connection", (socket) => {
 		});
 	});
 
+	socket.on("message", (data) => {
+		servers = servers.map((server) => {
+			if (server.name == data.serverName) {
+				server.messagesArray.push(data);
+			}
+			server.players.map((player) => {
+				socketIO.to(player.socketID).emit("messageResponse", data);
+			});
+			return server;
+		});
+	});
+
+	socket.on("typing", (data) => {
+		// console.log(`⚡typing Request by ${data.username} of server ${data.serverName} with text: ${data.text}`);
+		servers.map((server) => {
+			if (server.name == data.serverName) {
+				server.players.map((player) => {
+					if (player.username != data.username) {
+						socketIO.to(player.socketID).emit("typingResponse", data);
+					}
+				});
+			}
+		});
+	});
+
 	socket.on("resetServerData", (data) => {
-		console.log("⚡resetServerData Request⚡", data);
+		console.log(`⚡resetServerData Request by ${data.username} of server ${data.serverName}`);
 		servers = servers.map((server) => {
 			if (server.name == data.serverName) {
 				server.fieldArray = [...defaultFieldArray];
 				server.turn = "White";
 				server.stageArray = [];
-				server.movesArray = [];
+				server.messagesArray = [];
 				server.players.map((player) => {
 					socketIO.to(player.socketID).emit("getServerDataResponse", server);
 				});
@@ -563,7 +618,6 @@ socketIO.on("connection", (socket) => {
 	});
 
 	socket.on("disconnect", () => {
-		console.log("⚡disconnect Request⚡");
 		let user = users.find((user) => user.socketID == socket.id);
 		if (user == undefined) {
 			console.log(`⚡disconnect Response⚡: socket ${socket.id}) disconnected`);
@@ -573,6 +627,15 @@ socketIO.on("connection", (socket) => {
 				server = { ...server, players: server.players.filter((player) => player.socketID !== socket.id) };
 				server.players.map((player) => {
 					socketIO.to(player.socketID).emit("getServerDataResponse", server);
+					let msg = {
+						username: "Server",
+						text: `${user.username} disconnected`,
+						id: `${socket.id}-${Date.now()}`,
+						date: Date.now(),
+						serverName: server.name,
+					};
+					server.messagesArray.push(msg);
+					socketIO.to(player.socketID).emit("messageResponse", msg);
 				});
 				return server;
 			});
