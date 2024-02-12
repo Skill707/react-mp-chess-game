@@ -2,7 +2,6 @@
     padding: 8px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     gap: 8px;
 }
 
@@ -17,7 +16,9 @@
     border: 1px solid rgba(128, 128, 128, 0.479);
     border-radius: 4px;
     padding: 8px;
-    height: 20%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 
     h3 {
         margin: 0;
@@ -28,10 +29,9 @@
     border: 1px solid rgba(128, 128, 128, 0.479);
     border-radius: 4px;
     padding: 8px;
-    height: 40%;
 
     h3 {
-        margin: 0 0 8px 0;
+        margin: 0;
     }
 }
 
@@ -39,9 +39,8 @@
     border: 1px solid rgba(128, 128, 128, 0.479);
     border-radius: 4px;
     padding: 8px;
-    height: 40%;
 
     h3 {
-        margin: 0 0 8px 0;
+        margin: 0;
     }
 }

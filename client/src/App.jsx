@@ -2,38 +2,62 @@ import LoginFormModal from "./components/LoginFormModal";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
-import { setConnected, setUserAccepted } from "./redux/dataSlice";
+import { setJoinedServerData, setUserAccepted } from "./redux/dataSlice";
 import ServersList from "./components/ServersList";
 import GamePage from "./components/GamePage";
+import LoadingModal from "./components/LoadingModal";
 
 export default function App({ socket }) {
 	console.log("component App rendering...");
 
 	const dispatch = useDispatch();
 	const [openLoginFormModal, setOpenLoginFormModal] = useState(false);
+	const [openLoadingModal, setOpenLoadingModal] = useState(false);
+	const [socketConnected, setSocketConnected] = useState(false);
+	const [inGame, setInGame] = useState(false);
 	const loggedUser = useSelector((state) => state.data.loggedUser);
-	const joinedServerData = useSelector((state) => state.data.joinedServerData);
-	const socketConnected = useSelector((state) => state.data.socketConnected);
 	const userAccepted = useSelector((state) => state.data.userAccepted);
 
 	useEffect(() => {
 		if (socketConnected == false) {
 			console.log("socket connecting...");
+			setOpenLoadingModal(true);
 			socket.connect();
+		} else {
+			console.log("socket connected!");
 		}
 	}, [socketConnected]);
 
 	useEffect(() => {
 		socket.on("connect", () => {
 			console.log("socket connected. id: ", socket.id); // x8WIv7-mJelg7on_ALbx
-			dispatch(setConnected(true));
+			console.log(`connected with transport ${socket.io.engine.transport.name}`);
+			setOpenLoadingModal(false);
+			setSocketConnected(true);
+			socket.io.engine.on("upgrade", (transport) => {
+				console.log(`transport upgraded to ${transport.name}`);
+			});
 		});
 
-		socket.on("disconnect", () => {
-			console.log("socket disconnected");
-			dispatch(setConnected(false));
+		socket.on("connect_error", (err) => {
+			console.log(`connect_error due to ${err.message}`);
+			setSocketConnected(false);
+			dispatch(setJoinedServerData(null));
+			setInGame(false)
+			dispatch(setUserAccepted(false));
+			setOpenLoadingModal(true);
+			socket.connect();
 		});
-	}, [socket]);
+
+		socket.on("disconnect", (reason) => {
+			console.log(`disconnect due to ${reason}`);
+			setSocketConnected(false);
+			dispatch(setJoinedServerData(null));
+			setInGame(false)
+			dispatch(setUserAccepted(false));
+			setOpenLoadingModal(true);
+		});
+	}, [socket, socketConnected]);
 
 	useEffect(() => {
 		if ((userAccepted == false) & (loggedUser != null)) {
@@ -49,18 +73,20 @@ export default function App({ socket }) {
 				}
 			});
 		}
-	}, []);
+	}, [userAccepted]);
 
 	useEffect(() => {
-		if (loggedUser == null) {
+		if (socketConnected & (loggedUser == null) & (userAccepted == false)) {
 			setOpenLoginFormModal(true);
 		}
-	}, [loggedUser, userAccepted]);
+	}, [socketConnected, loggedUser, userAccepted]);
 
 	return (
 		<>
+			<LoadingModal openLoadingModal={openLoadingModal} socketConnected={socketConnected} loggedUser={loggedUser} />
 			<LoginFormModal socket={socket} openLoginFormModal={openLoginFormModal} setOpenLoginFormModal={setOpenLoginFormModal} />
-			{joinedServerData ? <GamePage socket={socket} /> : <ServersList socket={socket} />}
+			{!inGame && <ServersList socket={socket} setSocketConnected={setSocketConnected} setInGame={setInGame} />}
+			{inGame && <GamePage socket={socket} setInGame={setInGame} />}
 		</>
 	);
 }

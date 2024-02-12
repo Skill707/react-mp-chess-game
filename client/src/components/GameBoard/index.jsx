@@ -1,6 +1,9 @@
 import css from "./index.module.scss";
 import Field from "../Field";
 import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { setJoinedServerData } from "../../redux/dataSlice";
+import Swal from "sweetalert2";
 
 function getSideOfField(side, item, array) {
 	let result = "none";
@@ -32,7 +35,7 @@ function getSideOfField(side, item, array) {
 		default:
 			break;
 	}
-	console.log("🚀 ~ getSideOfField ~ all:", side, item, result);
+	// console.log("🚀 ~ getSideOfField ~ all:", side, item, result);
 	return result;
 }
 
@@ -66,22 +69,38 @@ function getSideOfField2(side, item, array) {
 		default:
 			break;
 	}
-	console.log("🚀 ~ getSideOfField2 ~ all:", side, item, result);
+	// console.log("🚀 ~ getSideOfField2 ~ all:", side, item, result);
 	return result;
 }
 
 export default function GameBoard({ socket }) {
 	console.log("GameBoard component rendered");
+	const dispatch = useDispatch();
 	const selectedBox = useSelector((state) => state.data.selectedBox);
 	const playerTeam = useSelector((state) => state.data.playerTeam);
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
-	let fieldArray = joinedServerData.fieldArray;
-	const currentTurn = joinedServerData.turn;
+	const loggedUser = useSelector((state) => state.data.loggedUser);
+	let fieldArray;
+	if (joinedServerData != null) {
+		fieldArray = joinedServerData.fieldArray;
+	} else {
+		fieldArray = null;
+	}
 	let enemyTeam = "";
 	if (playerTeam == "Black") enemyTeam = "White";
 	else if (playerTeam == "White") enemyTeam = "Black";
 
-	const dispatch = useDispatch();
+	useEffect(() => {
+		// 	if (joinedServerData != null) {
+		// 		socket.emit("getServerData", { username: loggedUser, serverName: joinedServerData.name });
+		// 	} else {
+		// 		Swal.fire(`Error: Server not found! connected: ${socket.connected} joinedServerData: ${joinedServerData}`);
+		// 	}
+
+		socket.on("getServerDataResponse", (data) => {
+			dispatch(setJoinedServerData(data));
+		});
+	}, [socket]);
 
 	if (selectedBox) {
 		let sf = selectedBox;
@@ -274,13 +293,26 @@ export default function GameBoard({ socket }) {
 		}
 	}
 
+	// let AAAfieldArray = [...fieldArray];
+	// fieldArray.map((selectedBox) => {
+	// 	if (selectedBox?.piece != null) {
+	// 		if (selectedBox.piece.team == enemyTeam) {
+	// 			console.log(selectedBox.piece.type);
+	// 		}
+	// 	}
+	// });
+
 	return (
 		<div id="GameBoard" className={css.GameBoard} style={playerTeam == "Black" ? { rotate: "180deg" } : { rotate: "0deg" }}>
 			<div className={css.Top}>
 				<div className={css.EmptyBox}></div>
 				<div className={css.LetterBar}>
 					{["A", "B", "C", "D", "E", "F", "G", "H"].map((item) => {
-						return <div style={{ rotate: "180deg" }}>{item}</div>;
+						return (
+							<div key={item} style={{ rotate: "180deg" }}>
+								{item}
+							</div>
+						);
 					})}
 				</div>
 				<div className={css.EmptyBox}></div>
@@ -288,18 +320,22 @@ export default function GameBoard({ socket }) {
 			<div className={css.Middle}>
 				<div className={css.NumberBar}>
 					{["8", "7", "6", "5", "4", "3", "2", "1"].map((item) => {
-						return <div >{item}</div>;
+						return <div key={item}>{item}</div>;
 					})}
 				</div>
 				<div className={css.Board}>
 					{fieldArray &&
 						fieldArray.map((field) => {
-							return <Field playerTeam={playerTeam} fieldData={field} socket={socket} key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`} />;
+							return <Field key={`${field.x}-${field.y}`} fieldData={field} socket={socket} playerTeam={playerTeam} />;
 						})}
 				</div>
 				<div className={css.NumberBar}>
 					{["8", "7", "6", "5", "4", "3", "2", "1"].map((item) => {
-						return <div style={{ rotate: "180deg" }}>{item}</div>;
+						return (
+							<div key={item} style={{ rotate: "180deg" }}>
+								{item}
+							</div>
+						);
 					})}
 				</div>
 			</div>
@@ -307,7 +343,7 @@ export default function GameBoard({ socket }) {
 				<div className={css.EmptyBox}></div>
 				<div className={css.LetterBar}>
 					{["A", "B", "C", "D", "E", "F", "G", "H"].map((item) => {
-						return <div>{item}</div>;
+						return <div key={item}>{item}</div>;
 					})}
 				</div>
 				<div className={css.EmptyBox}></div>

@@ -18,7 +18,6 @@ export const dataSlice = createSlice({
 		selectedBox: null,
 		playerTeam: "null",
 		joinedServerData: null,
-		socketConnected: false,
 		userAccepted: false,
 	},
 	reducers: {
@@ -44,15 +43,12 @@ export const dataSlice = createSlice({
 		setCurrentTurn: (state, action) => {
 			state.joinedServerData = { ...state.joinedServerData, turn: action.payload };
 		},
-		setConnected: (state, action) => {
-			state.socketConnected = action.payload;
-		},
 		setUserAccepted: (state, action) => {
 			state.userAccepted = action.payload;
 		},
 	},
 });
 
-export const { select, editFieldArray, addToStageArray, setLoggedUser, setCurrentTurn, setJoinedServerData, setPlayerTeam, setConnected, setUserAccepted } = dataSlice.actions;
+export const { select, editFieldArray, addToStageArray, setLoggedUser, setCurrentTurn, setJoinedServerData, setPlayerTeam, setUserAccepted } = dataSlice.actions;
 
 export default dataSlice.reducer;

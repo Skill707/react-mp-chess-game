@@ -8,28 +8,14 @@ import { setJoinedServerData } from "../../redux/dataSlice";
 import Chat from "../Chat/index";
 import GameInfo from "../GameInfo/index";
 
-export default function GamePage({ socket }) {
-	const dispatch = useDispatch();
-	const loggedUser = useSelector((state) => state.data.loggedUser);
-	const joinedServerData = useSelector((state) => state.data.joinedServerData);
-
-	useEffect(() => {
-		if (joinedServerData != null) {
-			socket.emit("getServerData", { username: loggedUser, serverName: joinedServerData.name });
-		} else {
-			Swal.fire(`Error: Server not found! connected: ${socket.connected} joinedServerData: ${joinedServerData}`);
-		}
-
-		socket.on("getServerDataResponse", (data) => {
-			dispatch(setJoinedServerData(data));
-		});
-	}, [socket]);
+export default function GamePage({ socket, setInGame }) {
+	console.log("component GamePage rendered");
 
 	return (
 		<div id="GamePage">
 			<Chat socket={socket} />
 			<GameBoard socket={socket} />
-			<GameInfo socket={socket} />
+			<GameInfo socket={socket} setInGame={setInGame} />
 		</div>
 	);
 }

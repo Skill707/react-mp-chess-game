@@ -5,14 +5,18 @@ import css from "./index.module.scss";
 import { useDispatch } from "react-redux";
 import { setLoggedUser, setUserAccepted } from "../../redux/dataSlice";
 import Swal from "sweetalert2";
+import LinearProgress from "@mui/material/LinearProgress";
+import { useState } from "react";
 
 const validationSchema = yup.object({
-	username: yup.string("Enter your username").required("Username is required"),
+	username: yup.string("Enter your username").min(3, "Min. 3 letters").max(10, "Max. 10 letters").required("Username is required"),
 });
 
 export default function LoginFormModal({ socket, openLoginFormModal, setOpenLoginFormModal }) {
 	console.log("component LoginFormModal rendering...");
 	const dispatch = useDispatch();
+
+	const [loading, setLoading] = useState(false);
 
 	const formik = useFormik({
 		initialValues: {
@@ -21,6 +25,7 @@ export default function LoginFormModal({ socket, openLoginFormModal, setOpenLogi
 		validationSchema: validationSchema,
 		onSubmit: (values, action) => {
 			action.resetForm();
+			setLoading(true);
 			socket.emit("newUser", { username: values.username });
 			socket.on("newUserResponse", (data) => {
 				console.log("HomePage: newUserResponse: ", data);
@@ -32,6 +37,7 @@ export default function LoginFormModal({ socket, openLoginFormModal, setOpenLogi
 				} else {
 					Swal.fire("User already connected!");
 				}
+				setLoading(false);
 			});
 		},
 	});
@@ -66,6 +72,7 @@ export default function LoginFormModal({ socket, openLoginFormModal, setOpenLogi
 					<Button color="primary" variant="contained" fullWidth type="submit">
 						Continue
 					</Button>
+					{loading ? <LinearProgress /> : null}
 				</form>
 			</Fade>
 		</Modal>

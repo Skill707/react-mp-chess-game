@@ -16,7 +16,7 @@ export default function Chat({ socket }) {
 	const loggedUser = useSelector((state) => state.data.loggedUser);
 	const playerTeam = useSelector((state) => state.data.playerTeam);
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
-	const [messagesArray, setMessagesArray] = useState(joinedServerData.messagesArray);
+	const [messagesArray, setMessagesArray] = useState([]);
 	let enemyTeam;
 	if (playerTeam == "Black") {
 		enemyTeam = "White";
@@ -24,7 +24,7 @@ export default function Chat({ socket }) {
 		enemyTeam = "Black";
 	}
 
-	let enemy = joinedServerData.players.find((u) => u.team == enemyTeam);
+	let enemy;
 
 	const formik = useFormik({
 		initialValues: {
@@ -42,6 +42,13 @@ export default function Chat({ socket }) {
 			});
 		},
 	});
+
+	useEffect(() => {
+		if (joinedServerData != null) {
+			setMessagesArray(joinedServerData.messagesArray);
+			enemy = joinedServerData.players.find((u) => u.team == enemyTeam);
+		}
+	}, []);
 
 	useEffect(() => {
 		socket.on("messageResponse", (data) => setMessagesArray([...messagesArray, data]));
@@ -62,7 +69,10 @@ export default function Chat({ socket }) {
 				{messagesArray &&
 					messagesArray.map((item) => {
 						return (
-							<div key={item.id} className={item.username == loggedUser ? css.PlayerMessage : item.username == enemy?.username ? css.OpponentMessage : css.ServerMessage}>
+							<div
+								key={`${item.text}-${item.id}-${Math.random() * 999}`}
+								className={item.username == loggedUser ? css.PlayerMessage : item.username == enemy?.username ? css.OpponentMessage : css.ServerMessage}
+							>
 								<div>
 									<p>{item.text}</p>
 									<p>{moment(item.date).fromNow()}</p>
@@ -70,10 +80,9 @@ export default function Chat({ socket }) {
 							</div>
 						);
 					})}
-				<div className={css.IsTyping}>
+				<div className={css.IsTyping} ref={lastMessageRef}>
 					<p>{typingStatus}</p>
 				</div>
-				<div ref={lastMessageRef} />
 			</div>
 			<form onSubmit={formik.handleSubmit} className={css.Form}>
 				<TextField

@@ -6,14 +6,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
   p {
     position: absolute;
     z-index: 5;
-    font-size: smaller;
+    font-size: xx-small;
     text-transform: uppercase;
     top: 0;
     left: 0;
     margin: 0;
+  }
+
+  p::selection {
+    background-color: transparent;
   }
 }
 

@@ -1,0 +1,27 @@
+.Modal {
+    position: absolute;
+    left: 50dvw;
+    top: 50dvh;
+    transform: translate(-50dvw, -50dvh);
+    height: 100dvh;
+    width: 100dvw;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+
+    div{
+        border-radius: 4px;
+        width: 200px;
+        padding: 4px;
+        background-color: white;
+
+        h4{
+            margin: 0;
+        }
+    }
+
+}

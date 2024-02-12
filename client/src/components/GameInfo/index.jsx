@@ -1,19 +1,39 @@
-import { Button, IconButton } from "@mui/material";
+import { Button } from "@mui/material";
 import css from "./index.module.scss";
-import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setConnected, setJoinedServerData, setLoggedUser, setUserAccepted } from "../../redux/dataSlice";
-import { IoIosLogOut } from "react-icons/io";
-import { useEffect } from "react";
+import { setJoinedServerData, setLoggedUser, setUserAccepted } from "../../redux/dataSlice";
 import StageBoard from "../StageBoard";
+import { useEffect, useState } from "react";
+import moment from "moment";
 
-export default function GameInfo({ socket }) {
+function Time({ socket }) {
+	console.log("component Time rendering...");
+	const joinedServerData = useSelector((state) => state.data.joinedServerData);
+	const loggedUser = useSelector((state) => state.data.loggedUser);
+	const [time, setTime] = useState(60);
+
+	let nextTurn = "";
+	if (joinedServerData.turn == "Black") nextTurn = "White";
+	else if (joinedServerData.turn == "White") nextTurn = "Black";
+
+	// setTimeout(() => {
+	// 	let num = (60000 + (joinedServerData.time - Date.now())) / 1000;
+	// 	setTime(num);
+	// }, 100);
+
+	// if (time <= 0) {
+	// 	socket.emit("updateServerData", { username: loggedUser, serverName: joinedServerData.name, turn: nextTurn, time: Date.now() });
+	// }
+
+	return <h3>Time: {time}</h3>;
+}
+
+export default function GameInfo({ socket, setInGame }) {
 	console.log("component GameInfo rendering...");
 	const dispatch = useDispatch();
 	const loggedUser = useSelector((state) => state.data.loggedUser);
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
 	const playerTeam = useSelector((state) => state.data.playerTeam);
-	const socketConnected = useSelector((state) => state.data.socketConnected);
 
 	let enemyTeam;
 	if (playerTeam == "Black") {
@@ -21,11 +41,14 @@ export default function GameInfo({ socket }) {
 	} else {
 		enemyTeam = "Black";
 	}
-	let oponentPlayerName = joinedServerData.players.find((player) => player.team == enemyTeam);
-	if (oponentPlayerName == undefined) {
-		oponentPlayerName = "No player";
-	} else {
-		oponentPlayerName = oponentPlayerName.username;
+
+	let oponentPlayerName = "No player";
+
+	if (joinedServerData != null) {
+		oponentPlayerName = joinedServerData.players.find((player) => player.team == enemyTeam);
+		if (oponentPlayerName != undefined) {
+			oponentPlayerName = oponentPlayerName.username;
+		}
 	}
 
 	return (
@@ -60,28 +83,32 @@ export default function GameInfo({ socket }) {
 						dispatch(setLoggedUser(null));
 						dispatch(setJoinedServerData(null));
 						dispatch(setUserAccepted(false));
-						dispatch(setConnected(false));
+						setInGame(false)
 					}}
 				>
 					Log out
 				</Button>
 			</div>
 			<div className={css.InfoBar}>
-				<h3>turn: {joinedServerData.turn}</h3>
+				<h3>Turn: {joinedServerData.turn} team</h3>
+				<span>|</span>
+				<Time socket={socket} />
 			</div>
-			<div className={css.OponentInfoBar}>
-				<h3>
-					{enemyTeam} team: {oponentPlayerName}
-				</h3>
-				<StageBoard team={enemyTeam} />
-			</div>
+			<div id="PlayersInfoBox">
+				<div className={css.OponentInfoBar}>
+					<h3>
+						{enemyTeam} team: {oponentPlayerName}
+					</h3>
+					<StageBoard team={enemyTeam} />
+				</div>
 
-			<div className={css.PlayerInfoBar}>
-				<h3>
-					{playerTeam} team: {loggedUser}
-					{joinedServerData.turn == playerTeam ? ". Your turn!" : null}
-				</h3>
-				<StageBoard team={playerTeam} />
+				<div className={css.PlayerInfoBar}>
+					<h3>
+						{playerTeam} team: {loggedUser}
+						{joinedServerData.turn == playerTeam ? ". Your turn!" : null}
+					</h3>
+					<StageBoard team={playerTeam} />
+				</div>
 			</div>
 		</div>
 	);

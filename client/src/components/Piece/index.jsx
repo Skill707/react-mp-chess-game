@@ -8,7 +8,10 @@ import { FaChessRook } from "react-icons/fa";
 
 export default function Piece({ piece }) {
 	return (
-		<div className={css.Item} style={piece?.team == "Black" ? { color: "black" } : { color: "white" }}>
+		<div
+			className={css.Item}
+			style={piece.team == "Black" ? { color: "black" } : { color: "white" }}
+		>
 			{piece.type == "Bishop" ? (
 				<FaChessBishop />
 			) : piece.type == "King" ? (

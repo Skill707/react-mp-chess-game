@@ -408,40 +408,45 @@ const defaultFieldArray = [
 
 let servers = [
 	{
-		name: "Server1",
+		name: "Room 1",
 		turn: "White",
+		time: 60,
 		fieldArray: defaultFieldArray,
 		stageArray: [],
 		messagesArray: [],
 		players: [],
 	},
 	{
-		name: "Server2",
+		name: "Room 2",
 		turn: "White",
+		time: 60,
 		fieldArray: defaultFieldArray,
 		stageArray: [],
 		messagesArray: [],
 		players: [],
 	},
 	{
-		name: "Server3",
+		name: "Room 3",
 		turn: "White",
+		time: 60,
 		fieldArray: defaultFieldArray,
 		stageArray: [],
 		messagesArray: [],
 		players: [],
 	},
 	{
-		name: "Server4",
+		name: "Room 4",
 		turn: "White",
+		time: 60,
 		fieldArray: defaultFieldArray,
 		stageArray: [],
 		messagesArray: [],
 		players: [],
 	},
 	{
-		name: "Server5",
+		name: "Room 5",
 		turn: "White",
+		time: 60,
 		fieldArray: defaultFieldArray,
 		stageArray: [],
 		messagesArray: [],
@@ -553,7 +558,7 @@ socketIO.on("connection", (socket) => {
 	});
 
 	socket.on("updateServerData", (data) => {
-		console.log(`⚡updateServerData Request by ${data.username} of server ${data.serverName}`);
+		console.log(`⚡updateServerData Request by ${data.username} of server ${data.serverName} at ${data.time}`);
 		servers = servers.map((server) => {
 			if (server.name == data.serverName) {
 				if (data.fieldArray != undefined) {
@@ -564,6 +569,9 @@ socketIO.on("connection", (socket) => {
 				}
 				if (data.turn != undefined) {
 					server.turn = data.turn;
+				}
+				if (data.turn != undefined) {
+					server.time = data.time;
 				}
 				if (data.players != undefined) {
 					server.players = data.players;
@@ -583,6 +591,7 @@ socketIO.on("connection", (socket) => {
 			}
 			server.players.map((player) => {
 				socketIO.to(player.socketID).emit("messageResponse", data);
+				console.log(`⚡message from ${data.username} to ${player.username} at ${server.name}`);
 			});
 			return server;
 		});
@@ -595,6 +604,7 @@ socketIO.on("connection", (socket) => {
 				server.players.map((player) => {
 					if (player.username != data.username) {
 						socketIO.to(player.socketID).emit("typingResponse", data);
+						// console.log(`⚡typing from ${data.username} to ${player.username} at ${server.name}`);
 					}
 				});
 			}
@@ -607,6 +617,7 @@ socketIO.on("connection", (socket) => {
 			if (server.name == data.serverName) {
 				server.fieldArray = [...defaultFieldArray];
 				server.turn = "White";
+				server.time = 60;
 				server.stageArray = [];
 				server.messagesArray = [];
 				server.players.map((player) => {
