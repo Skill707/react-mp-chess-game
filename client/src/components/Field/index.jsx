@@ -74,7 +74,7 @@ export default function Field({ fieldData, socket, playerTeam }) {
 											}
 											socket.emit("message", {
 												username: loggedUser,
-												text: `${first.x}-${first.y} to ${clicked.x}-${clicked.y}. ${clicked.piece.type} down.`,
+												text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}. ${clicked.piece.type} down!`,
 												id: `${socket.id}-${Date.now()}`,
 												date: Date.now(),
 												serverName: joinedServerData.name,

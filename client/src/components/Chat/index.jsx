@@ -16,7 +16,7 @@ export default function Chat({ socket }) {
 	const loggedUser = useSelector((state) => state.data.loggedUser);
 	const playerTeam = useSelector((state) => state.data.playerTeam);
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
-	const [messagesArray, setMessagesArray] = useState([]);
+	const [messagesArray, setMessagesArray] = useState(joinedServerData.messagesArray);
 	let enemyTeam;
 	if (playerTeam == "Black") {
 		enemyTeam = "White";
@@ -24,7 +24,7 @@ export default function Chat({ socket }) {
 		enemyTeam = "Black";
 	}
 
-	let enemy;
+	let enemy = joinedServerData.players.find((u) => u.team == enemyTeam);
 
 	const formik = useFormik({
 		initialValues: {
@@ -42,13 +42,6 @@ export default function Chat({ socket }) {
 			});
 		},
 	});
-
-	useEffect(() => {
-		if (joinedServerData != null) {
-			setMessagesArray(joinedServerData.messagesArray);
-			enemy = joinedServerData.players.find((u) => u.team == enemyTeam);
-		}
-	}, []);
 
 	useEffect(() => {
 		socket.on("messageResponse", (data) => setMessagesArray([...messagesArray, data]));
