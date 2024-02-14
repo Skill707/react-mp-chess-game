@@ -3,7 +3,8 @@ import Field from "../Field";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { setJoinedServerData } from "../../redux/dataSlice";
-import Swal from "sweetalert2";
+import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
+import Droppable from "../DragAndDrop/Droppable";
 
 function getSideOfField(side, item, array) {
 	let result = "none";
@@ -74,12 +75,13 @@ function getSideOfField2(side, item, array) {
 }
 
 export default function GameBoard({ socket }) {
-	console.log("GameBoard component rendered");
+	console.log("!!! component GameBoard rendering...");
 	const dispatch = useDispatch();
 	const selectedBox = useSelector((state) => state.data.selectedBox);
 	const playerTeam = useSelector((state) => state.data.playerTeam);
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
 	const loggedUser = useSelector((state) => state.data.loggedUser);
+
 	let fieldArray;
 	if (joinedServerData != null) {
 		fieldArray = joinedServerData.fieldArray;
@@ -91,14 +93,13 @@ export default function GameBoard({ socket }) {
 	else if (playerTeam == "White") enemyTeam = "Black";
 
 	useEffect(() => {
-		// 	if (joinedServerData != null) {
-		// 		socket.emit("getServerData", { username: loggedUser, serverName: joinedServerData.name });
-		// 	} else {
-		// 		Swal.fire(`Error: Server not found! connected: ${socket.connected} joinedServerData: ${joinedServerData}`);
-		// 	}
-
 		socket.on("getServerDataResponse", (data) => {
-			dispatch(setJoinedServerData(data));
+			if (data !== joinedServerData) {
+				console.log("JoinedServerData: need update");
+				dispatch(setJoinedServerData(data));
+			} else {
+				console.log("JoinedServerData: dont need update");
+			}
 		});
 	}, [socket]);
 
@@ -106,11 +107,9 @@ export default function GameBoard({ socket }) {
 		let sf = selectedBox;
 		if (sf.piece.type == "Pawn") {
 			for (let index = 0; index < 2; index++) {
-				if (selectedBox.piece.team == "Black") {
-					sf = getSideOfField("b", sf, fieldArray);
-				} else {
-					sf = getSideOfField("t", sf, fieldArray);
-				}
+				if (selectedBox.piece.team == "Black") sf = getSideOfField("b", sf, fieldArray);
+				else sf = getSideOfField("t", sf, fieldArray);
+
 				if (sf == undefined) break;
 				else {
 					if (sf.piece == null) {
@@ -128,15 +127,11 @@ export default function GameBoard({ socket }) {
 				}
 			}
 			sf = selectedBox;
-			if (selectedBox.piece.team == "Black") {
-				sf = getSideOfField("bl", sf, fieldArray);
-			} else {
-				sf = getSideOfField("tl", sf, fieldArray);
-			}
-			if (sf == undefined);
-			else {
-				if (sf.piece == null) {
-				} else {
+			if (selectedBox.piece.team == "Black") sf = getSideOfField("bl", sf, fieldArray);
+			else sf = getSideOfField("tl", sf, fieldArray);
+
+			if (sf == undefined) {
+				if (sf.piece != null) {
 					if (sf.piece.team == playerTeam) {
 					} else if (sf.piece.team == enemyTeam) {
 						fieldArray = fieldArray.map((item) => {
@@ -147,15 +142,11 @@ export default function GameBoard({ socket }) {
 				}
 			}
 			sf = selectedBox;
-			if (selectedBox.piece.team == "Black") {
-				sf = getSideOfField("br", sf, fieldArray);
-			} else {
-				sf = getSideOfField("tr", sf, fieldArray);
-			}
-			if (sf == undefined);
-			else {
+			if (selectedBox.piece.team == "Black") sf = getSideOfField("br", sf, fieldArray);
+			else sf = getSideOfField("tr", sf, fieldArray);
+
+			if (sf == undefined) {
 				if (sf.piece == null) {
-				} else {
 					if (sf.piece.team == playerTeam) {
 					} else if (sf.piece.team == enemyTeam) {
 						fieldArray = fieldArray.map((item) => {
@@ -195,8 +186,7 @@ export default function GameBoard({ socket }) {
 			["tl", "tr", "bl", "br", "lt", "lb", "rt", "rb"].forEach((side) => {
 				sf = selectedBox;
 				sf = getSideOfField2(side, sf, fieldArray);
-				if (sf == undefined);
-				else {
+				if (sf != undefined) {
 					if (sf.piece == null) {
 						fieldArray = fieldArray.map((item) => {
 							if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, path: true };
@@ -293,14 +283,171 @@ export default function GameBoard({ socket }) {
 		}
 	}
 
-	// let AAAfieldArray = [...fieldArray];
-	// fieldArray.map((selectedBox) => {
-	// 	if (selectedBox?.piece != null) {
-	// 		if (selectedBox.piece.team == enemyTeam) {
-	// 			console.log(selectedBox.piece.type);
+	// function mat(field) {
+	// 	const currentTurn = joinedServerData.turn;
+	// 	let nextTurn = "";
+	// 	if (currentTurn == "Black") nextTurn = "White";
+	// 	else if (currentTurn == "White") nextTurn = "Black";
+
+	// 	console.log(`mat from ${field}`);
+	// 	socket.emit("message", {
+	// 		username: loggedUser,
+	// 		text: `${playerTeam} team make mat!`,
+	// 		id: `${socket.id}-${Date.now()}`,
+	// 		date: Date.now(),
+	// 		serverName: joinedServerData.name,
+	// 	});
+	// 	// socket.emit("updateServerData", {
+	// 	// 	username: loggedUser,
+	// 	// 	serverName: joinedServerData.name,
+	// 	// 	turn: nextTurn,
+	// 	// 	time: Date.now(),
+	// 	// });
+	// }
+
+	// fieldArray.map((field) => {
+	// 	if (field.piece != null) {
+	// 		if (field.piece.team == playerTeam) {
+	// 			let sf = field;
+	// 			if (sf.piece.type == "Pawn") {
+	// 				sf = field;
+	// 				if (field.piece.team == "Black") sf = getSideOfField("bl", sf, fieldArray);
+	// 				else sf = getSideOfField("tl", sf, fieldArray);
+
+	// 				if (sf != undefined) {
+	// 					if (sf.piece != null) {
+	// 						if (sf.piece.team == enemyTeam) {
+	// 							if (sf.piece.type == "King") {
+	// 								mat(sf);
+	// 							}
+	// 						}
+	// 					}
+	// 				}
+	// 				sf = field;
+	// 				if (field.piece.team == "Black") sf = getSideOfField("br", sf, fieldArray);
+	// 				else sf = getSideOfField("tr", sf, fieldArray);
+
+	// 				if (sf != undefined) {
+	// 					if (sf.piece != null) {
+	// 						if (sf.piece.team == enemyTeam) {
+	// 							if (sf.piece.type == "King") {
+	// 								mat(sf);
+	// 							}
+	// 						}
+	// 					}
+	// 				}
+	// 			} else if (sf.piece.type == "Rook") {
+	// 				["t", "b", "l", "r"].forEach((side) => {
+	// 					sf = field;
+	// 					for (let index = 0; index < 8; index++) {
+	// 						sf = getSideOfField(side, sf, fieldArray);
+	// 						if (sf == undefined) break;
+	// 						else {
+	// 							if (sf.piece == null) {
+	// 							} else {
+	// 								if (sf.piece.team == playerTeam) {
+	// 									break;
+	// 								} else if (sf.piece.team == enemyTeam) {
+	// 									if (sf.piece.type == "King") {
+	// 										mat(sf);
+	// 									}
+	// 									break;
+	// 								}
+	// 							}
+	// 						}
+	// 					}
+	// 				});
+	// 			} else if (sf.piece.type == "Knight") {
+	// 				["tl", "tr", "bl", "br", "lt", "lb", "rt", "rb"].forEach((side) => {
+	// 					sf = field;
+	// 					sf = getSideOfField2(side, sf, fieldArray);
+	// 					if (sf == undefined);
+	// 					else {
+	// 						if (sf.piece != null) {
+	// 							if (sf.piece.team == enemyTeam) {
+	// 								if (sf.piece.type == "King") {
+	// 									mat(sf);
+	// 								}
+	// 							}
+	// 						}
+	// 					}
+	// 				});
+	// 			} else if (sf.piece.type == "Bishop") {
+	// 				["tl", "bl", "tr", "br"].forEach((side) => {
+	// 					sf = field;
+	// 					for (let index = 0; index < 8; index++) {
+	// 						sf = getSideOfField(side, sf, fieldArray);
+	// 						if (sf == undefined) break;
+	// 						else {
+	// 							if (sf.piece != null) {
+	// 								if (sf.piece.team == playerTeam) {
+	// 									break;
+	// 								} else if (sf.piece.team == enemyTeam) {
+	// 									if (sf.piece.type == "King") {
+	// 										mat(sf);
+	// 									}
+	// 									break;
+	// 								}
+	// 							}
+	// 						}
+	// 					}
+	// 				});
+	// 			} else if (sf.piece.type == "Queen") {
+	// 				["t", "tl", "tr", "b", "bl", "br", "l", "r"].forEach((side) => {
+	// 					sf = field;
+	// 					for (let index = 0; index < 8; index++) {
+	// 						sf = getSideOfField(side, sf, fieldArray);
+	// 						if (sf == undefined) break;
+	// 						else {
+	// 							if (sf.piece != null) {
+	// 								if (sf.piece.team == playerTeam) {
+	// 									break;
+	// 								} else if (sf.piece.team == enemyTeam) {
+	// 									if (sf.piece.type == "King") {
+	// 										mat(sf);
+	// 									}
+	// 									break;
+	// 								}
+	// 							}
+	// 						}
+	// 					}
+	// 				});
+	// 			} else if (sf.piece.type == "King") {
+	// 				["t", "tl", "tr", "b", "bl", "br", "l", "r"].forEach((side) => {
+	// 					sf = field;
+	// 					for (let index = 0; index < 1; index++) {
+	// 						sf = getSideOfField(side, sf, fieldArray);
+	// 						if (sf == undefined) break;
+	// 						else {
+	// 							if (sf.piece != null) {
+	// 								if (sf.piece.team == playerTeam) {
+	// 									break;
+	// 								} else if (sf.piece.team == enemyTeam) {
+	// 									if (sf.piece.type == "King") {
+	// 										mat(sf);
+	// 									}
+	// 									break;
+	// 								}
+	// 							}
+	// 						}
+	// 					}
+	// 				});
+	// 			}
 	// 		}
 	// 	}
 	// });
+
+	const mouseSensor = useSensor(MouseSensor);
+	const touchSensor = useSensor(TouchSensor);
+	const sensors = useSensors(touchSensor, mouseSensor);
+
+	function handleDragStart(event) {
+		console.log(event.active.data.current);
+	}
+
+	function handleDragEnd(event) {
+		console.log(event);
+	}
 
 	return (
 		<div id="GameBoard" className={css.GameBoard} style={playerTeam == "Black" ? { rotate: "180deg" } : { rotate: "0deg" }}>
@@ -323,12 +470,18 @@ export default function GameBoard({ socket }) {
 						return <div key={item}>{item}</div>;
 					})}
 				</div>
-				<div className={css.Board}>
-					{fieldArray &&
-						fieldArray.map((field) => {
-							return <Field key={`${field.x}-${field.y}`} fieldData={field} socket={socket} playerTeam={playerTeam} />;
-						})}
-				</div>
+				<DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} sensors={sensors}>
+					<div className={css.Board}>
+						{fieldArray &&
+							fieldArray.map((field) => {
+								return (
+									<Droppable key={`${field.x}-${field.y}`} id={`${field.x}-${field.y}`}>
+										<Field fieldData={field} socket={socket} playerTeam={playerTeam} joinedServerData={joinedServerData} />
+									</Droppable>
+								);
+							})}
+					</div>
+				</DndContext>
 				<div className={css.NumberBar}>
 					{["8", "7", "6", "5", "4", "3", "2", "1"].map((item) => {
 						return (

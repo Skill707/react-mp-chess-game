@@ -1,11 +1,8 @@
 import css from "./index.module.scss";
 import Field from "../Field";
-import { useSelector } from "react-redux";
 
-export default function StageBoard({ team }) {
-	console.log("StageBoard component rendered");
-	const joinedServerData = useSelector((state) => state.data.joinedServerData);
-	let stageArray = joinedServerData.stageArray;
+export default function StageBoard({ team, stageArray }) {
+	// console.log("component StageBoard  rendering...");
 
 	let playerTeam = "White";
 	stageArray = stageArray.filter((i) => i.piece.team == team);

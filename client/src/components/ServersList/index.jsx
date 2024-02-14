@@ -15,27 +15,30 @@ import LinearProgress from "@mui/material/LinearProgress";
 
 export default function ServersList({ socket, setSocketConnected, setInGame }) {
 	console.log("component ServersPage rendering...");
+
+	const dispatch = useDispatch();
 	const [serversArray, setServersArray] = useState(null);
 	const loggedUser = useSelector((state) => state.data.loggedUser);
 	const userAccepted = useSelector((state) => state.data.userAccepted);
-	const dispatch = useDispatch();
 
 	useEffect(() => {
-		console.log("useEffect[]: component ServersPage rendering...");
-
 		if (userAccepted) {
+			console.log("socket.emit(`getServersArray`, { username: loggedUser })");
 			socket.emit("getServersArray", { username: loggedUser });
-			console.log("getServersArray");
 			socket.on("getServersArrayResponse", (data) => {
-				console.log("useState: setServersArray");
+				console.log("setServersArray(data)");
 				setServersArray(data);
 			});
+		} else {
+			console.log("setServersArray(null)");
+			setServersArray(null);
 		}
 
 		return () => {
+			console.log("socket.removeAllListeners(getServersArrayResponse)");
 			socket.removeAllListeners("getServersArrayResponse");
 		};
-	}, [userAccepted]);
+	}, [socket, userAccepted]);
 
 	return (
 		<div>
@@ -48,14 +51,10 @@ export default function ServersList({ socket, setSocketConnected, setInGame }) {
 							color="primary"
 							variant="outlined"
 							onClick={() => {
-								console.log(`socket ${socket.id} disconnected`);
 								socket.disconnect();
 								localStorage.clear("ChessGameUserName");
 								dispatch(setLoggedUser(null));
-								dispatch(setJoinedServerData(null));
-								setInGame(false);
 								dispatch(setUserAccepted(false));
-								setSocketConnected(false);
 							}}
 						>
 							Log out
@@ -89,6 +88,7 @@ export default function ServersList({ socket, setSocketConnected, setInGame }) {
 													dispatch(setPlayerTeam("Black"));
 													dispatch(setJoinedServerData(server));
 													setInGame(true);
+													console.log("GAME START");
 												}}
 											>
 												Join
@@ -107,6 +107,7 @@ export default function ServersList({ socket, setSocketConnected, setInGame }) {
 													dispatch(setPlayerTeam("White"));
 													dispatch(setJoinedServerData(server));
 													setInGame(true);
+													console.log("GAME START");
 												}}
 											>
 												Join

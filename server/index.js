@@ -479,26 +479,6 @@ socketIO.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("oldUser", (data) => {
-		console.log(`⚡oldUser Request by socket ${socket.id} with username: ${data.username}`);
-		const checkUserSocket = users.find((user) => user.socketID == socket.id);
-		if (checkUserSocket == undefined) {
-			const checkUserName = users.find((user) => user.username == data.username);
-			if (checkUserName == undefined) {
-				users.push({ ...data, socketID: socket.id });
-				socketIO.to(socket.id).emit("oldUserResponse", { username: data.username, accepted: true });
-				// socketIO.emit("newUserResponse", users);
-				console.log(`⚡oldUser Response⚡: user ${data.username}(${socket.id}) added to users list. Users list: users<Array>`);
-			} else {
-				socketIO.to(socket.id).emit("oldUserResponse", { username: data.username, accepted: false });
-				console.log(`⚡oldUser Response⚡: username ${data.username} already used by socket ${checkUserName.socketID}`);
-			}
-		} else {
-			socketIO.to(socket.id).emit("oldUserResponse", { username: data.username, accepted: false });
-			console.log(`⚡oldUser Response⚡: socket ${socket.id} already used by user ${checkUserSocket.username}`);
-		}
-	});
-
 	socket.on("getServersArray", (data) => {
 		console.log(`⚡getServersArray Request by ${data.username}(${socket.id})`);
 		socketIO.to(socket.id).emit("getServersArrayResponse", servers);
@@ -570,12 +550,10 @@ socketIO.on("connection", (socket) => {
 				if (data.turn != undefined) {
 					server.turn = data.turn;
 				}
-				if (data.turn != undefined) {
+				if (data.time != undefined) {
 					server.time = data.time;
 				}
-				if (data.players != undefined) {
-					server.players = data.players;
-				}
+
 				server.players.map((player) => {
 					socketIO.to(player.socketID).emit("getServerDataResponse", server);
 				});

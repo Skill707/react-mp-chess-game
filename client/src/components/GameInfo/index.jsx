@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import moment from "moment";
 
 function Time({ socket }) {
-	console.log("component Time rendering...");
+	// console.log("component Time rendering...");
 	const joinedServerData = useSelector((state) => state.data.joinedServerData);
 	const loggedUser = useSelector((state) => state.data.loggedUser);
 	const [time, setTime] = useState(60);
@@ -68,6 +68,7 @@ export default function GameInfo({ socket, setInGame }) {
 					variant="outlined"
 					onClick={() => {
 						dispatch(setJoinedServerData(null));
+						setInGame(false);
 						socket.emit("LeaveFromServer", { serverName: joinedServerData.name, username: loggedUser });
 					}}
 				>
@@ -77,13 +78,12 @@ export default function GameInfo({ socket, setInGame }) {
 					color="primary"
 					variant="outlined"
 					onClick={() => {
-						console.log(`socket ${socket.id} disconnected`);
 						socket.disconnect();
 						localStorage.clear("ChessGameUserName");
 						dispatch(setLoggedUser(null));
 						dispatch(setJoinedServerData(null));
 						dispatch(setUserAccepted(false));
-						setInGame(false)
+						setInGame(false);
 					}}
 				>
 					Log out
@@ -99,7 +99,7 @@ export default function GameInfo({ socket, setInGame }) {
 					<h3>
 						{enemyTeam} team: {oponentPlayerName}
 					</h3>
-					<StageBoard team={enemyTeam} />
+					<StageBoard team={enemyTeam} stageArray={joinedServerData.stageArray}/>
 				</div>
 
 				<div className={css.PlayerInfoBar}>
@@ -107,7 +107,7 @@ export default function GameInfo({ socket, setInGame }) {
 						{playerTeam} team: {loggedUser}
 						{joinedServerData.turn == playerTeam ? ". Your turn!" : null}
 					</h3>
-					<StageBoard team={playerTeam} />
+					<StageBoard team={playerTeam} stageArray={joinedServerData.stageArray}/>
 				</div>
 			</div>
 		</div>

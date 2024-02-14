@@ -6,7 +6,7 @@
     border: 1px solid gray;
     border-radius: 10px;
     padding: 20px;
-    max-width: 300px;
+    max-width: 300px;   
     background-color: white !important;
 
     p {
@@ -14,8 +14,18 @@
     }
 }
 
-.Modal{
+.Modal {
+    position: absolute;
+    left: 50dvw;
+    top: 50dvh;
+    transform: translate(-50dvw, -50dvh);
+    height: 100dvh;
+    width: 100dvw;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 5;
     display: flex;
+    flex-direction: column;
+    gap: 20px;
     align-items: center;
     justify-content: center;
 }

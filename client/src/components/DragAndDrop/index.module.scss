@@ -1,0 +1,12 @@
+.Field {
+    height: 200px;
+    border: 1px solid black;
+    aspect-ratio: 1;
+    display: flex;
+}
+
+.Droppable {
+    width: 12.5%;
+    height: 12.5%;
+    aspect-ratio: 1;
+}
