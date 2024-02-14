@@ -6,17 +6,18 @@ export default function Draggable(props) {
 		id: props.id,
 		data: props.field,
 	});
+	let invert = 1;
+	if (props.field.piece != null) if (props.field.piece.team == "Black") invert = -1;
+
 	const style = transform
 		? {
-				transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+				transform: `translate3d(${transform.x * invert}px, ${transform.y * invert}px, 0)`,
 		  }
 		: undefined;
 
-	let drag = props.enabled;
-
 	return (
 		<>
-			{drag ? (
+			{props.enabled ? (
 				<div ref={setNodeRef} style={style} {...listeners} {...attributes}>
 					{props.children}
 				</div>
