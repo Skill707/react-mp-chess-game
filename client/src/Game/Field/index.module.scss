@@ -37,3 +37,19 @@
   background-color: rgba(255, 0, 0, 0.801);
   position: absolute;
 }
+
+.Item {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+      width: 80%;
+      height: 80%;
+      filter: drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));
+
+  }
+}

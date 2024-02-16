@@ -1,646 +1,263 @@
-const express = require("express");
-const app = express();
-const cors = require("cors");
-const http = require("http").Server(app);
-const PORT = 4000;
+const fastify = require("fastify");
+const fastifyIO = require("fastify-socket.io");
 
-const socketIO = require("socket.io")(http, {
+const server = fastify();
+server.register(fastifyIO, {
 	cors: {
 		origin: "http://localhost:5173",
 		// https://react-mp-chess-game.vercel.app
 		// http://localhost:5173
 	},
 });
-app.use(cors());
 
-let users = [];
+// user = { id, name }
+let usersArray = [];
 
-const defaultFieldArray = [
-	{
-		x: "a",
-		ax: "1",
-		y: "8",
-		piece: {
-			type: "Rook",
-			team: "Black",
-		},
-	},
-	{
-		x: "b",
-		ax: "2",
-		y: "8",
-		piece: { type: "Knight", team: "Black" },
-	},
-	{
-		x: "c",
-		ax: "3",
-		y: "8",
-		piece: { type: "Bishop", team: "Black" },
-	},
-	{
-		x: "d",
-		ax: "4",
-		y: "8",
-		piece: { type: "Queen", team: "Black" },
-	},
-	{
-		x: "e",
-		ax: "5",
-		y: "8",
-		piece: { type: "King", team: "Black" },
-	},
-	{
-		x: "f",
-		ax: "6",
-		y: "8",
-		piece: { type: "Bishop", team: "Black" },
-	},
-	{
-		x: "g",
-		ax: "7",
-		y: "8",
-		piece: { type: "Knight", team: "Black" },
-	},
-	{
-		x: "h",
-		ax: "8",
-		y: "8",
-		piece: { type: "Rook", team: "Black" },
-	},
-	{
-		x: "a",
-		ax: "1",
-		y: "7",
-		piece: { type: "Pawn", team: "Black" },
-	},
-	{
-		x: "b",
-		ax: "2",
-		y: "7",
-		piece: { type: "Pawn", team: "Black" },
-	},
-	{
-		x: "c",
-		ax: "3",
-		y: "7",
-		piece: { type: "Pawn", team: "Black" },
-	},
-	{
-		x: "d",
-		ax: "4",
-		y: "7",
-		piece: { type: "Pawn", team: "Black" },
-	},
-	{
-		x: "e",
-		ax: "5",
-		y: "7",
-		piece: { type: "Pawn", team: "Black" },
-	},
-	{
-		x: "f",
-		ax: "6",
-		y: "7",
-		piece: { type: "Pawn", team: "Black" },
-	},
-	{
-		x: "g",
-		ax: "7",
-		y: "7",
-		piece: { type: "Pawn", team: "Black" },
-	},
-	{
-		x: "h",
-		ax: "8",
-		y: "7",
-		piece: { type: "Pawn", team: "Black" },
-	},
-	{
-		x: "a",
-		ax: "1",
-		y: "6",
-		piece: null,
-	},
-	{
-		x: "b",
-		ax: "2",
-		y: "6",
-		piece: null,
-	},
-	{
-		x: "c",
-		ax: "3",
-		y: "6",
-		piece: null,
-	},
-	{
-		x: "d",
-		ax: "4",
-		y: "6",
-		piece: null,
-	},
-	{
-		x: "e",
-		ax: "5",
-		y: "6",
-		piece: null,
-	},
-	{
-		x: "f",
-		ax: "6",
-		y: "6",
-		piece: null,
-	},
-	{
-		x: "g",
-		ax: "7",
-		y: "6",
-		piece: null,
-	},
-	{
-		x: "h",
-		ax: "8",
-		y: "6",
-		piece: null,
-	},
-	{
-		x: "a",
-		ax: "1",
-		y: "5",
-		piece: null,
-	},
-	{
-		x: "b",
-		ax: "2",
-		y: "5",
-		piece: null,
-	},
-	{
-		x: "c",
-		ax: "3",
-		y: "5",
-		piece: null,
-	},
-	{
-		x: "d",
-		ax: "4",
-		y: "5",
-		piece: null,
-	},
-	{
-		x: "e",
-		ax: "5",
-		y: "5",
-		piece: null,
-	},
-	{
-		x: "f",
-		ax: "6",
-		y: "5",
-		piece: null,
-	},
-	{
-		x: "g",
-		ax: "7",
-		y: "5",
-		piece: null,
-	},
-	{
-		x: "h",
-		ax: "8",
-		y: "5",
-		piece: null,
-	},
-	{
-		x: "a",
-		ax: "1",
-		y: "4",
-		piece: null,
-	},
-	{
-		x: "b",
-		ax: "2",
-		y: "4",
-		piece: null,
-	},
-	{
-		x: "c",
-		ax: "3",
-		y: "4",
-		piece: null,
-	},
-	{
-		x: "d",
-		ax: "4",
-		y: "4",
-		piece: null,
-	},
-	{
-		x: "e",
-		ax: "5",
-		y: "4",
-		piece: null,
-	},
-	{
-		x: "f",
-		ax: "6",
-		y: "4",
-		piece: null,
-	},
-	{
-		x: "g",
-		ax: "7",
-		y: "4",
-		piece: null,
-	},
-	{
-		x: "h",
-		ax: "8",
-		y: "4",
-		piece: null,
-	},
-	{
-		x: "a",
-		ax: "1",
-		y: "3",
-		piece: null,
-	},
-	{
-		x: "b",
-		ax: "2",
-		y: "3",
-		piece: null,
-	},
-	{
-		x: "c",
-		ax: "3",
-		y: "3",
-		piece: null,
-	},
-	{
-		x: "d",
-		ax: "4",
-		y: "3",
-		piece: null,
-	},
-	{
-		x: "e",
-		ax: "5",
-		y: "3",
-		piece: null,
-	},
-	{
-		x: "f",
-		ax: "6",
-		y: "3",
-		piece: null,
-	},
-	{
-		x: "g",
-		ax: "7",
-		y: "3",
-		piece: null,
-	},
-	{
-		x: "h",
-		ax: "8",
-		y: "3",
-		piece: null,
-	},
+const defaultFieldArray = require("./components/defaultFieldArray.js");
+let roomsArray = require("./components/roomsArray.js");
 
-	{
-		x: "a",
-		ax: "1",
-		y: "2",
-		piece: { type: "Pawn", team: "White" },
-	},
-	{
-		x: "b",
-		ax: "2",
-		y: "2",
-		piece: { type: "Pawn", team: "White" },
-	},
-	{
-		x: "c",
-		ax: "3",
-		y: "2",
-		piece: { type: "Pawn", team: "White" },
-	},
-	{
-		x: "d",
-		ax: "4",
-		y: "2",
-		piece: { type: "Pawn", team: "White" },
-	},
-	{
-		x: "e",
-		ax: "5",
-		y: "2",
-		piece: { type: "Pawn", team: "White" },
-	},
-	{
-		x: "f",
-		ax: "6",
-		y: "2",
-		piece: { type: "Pawn", team: "White" },
-	},
-	{
-		x: "g",
-		ax: "7",
-		y: "2",
-		piece: { type: "Pawn", team: "White" },
-	},
-	{
-		x: "h",
-		ax: "8",
-		y: "2",
-		piece: { type: "Pawn", team: "White" },
-	},
-	{
-		x: "a",
-		ax: "1",
-		y: "1",
-		piece: { type: "Rook", team: "White" },
-	},
-	{
-		x: "b",
-		ax: "2",
-		y: "1",
-		piece: { type: "Knight", team: "White" },
-	},
-	{
-		x: "c",
-		ax: "3",
-		y: "1",
-		piece: { type: "Bishop", team: "White" },
-	},
-	{
-		x: "d",
-		ax: "4",
-		y: "1",
-		piece: { type: "Queen", team: "White" },
-	},
-	{
-		x: "e",
-		ax: "5",
-		y: "1",
-		piece: { type: "King", team: "White" },
-	},
-	{
-		x: "f",
-		ax: "6",
-		y: "1",
-		piece: { type: "Bishop", team: "White" },
-	},
-	{
-		x: "g",
-		ax: "7",
-		y: "1",
-		piece: { type: "Knight", team: "White" },
-	},
-	{
-		x: "h",
-		ax: "8",
-		y: "1",
-		piece: { type: "Rook", team: "White" },
-	},
-];
+server.ready().then(() => {
+	server.io.on("connection", (socket) => {
+		console.log(`Server: socket ${socket.id} just connected!`);
 
-let servers = [
-	{
-		name: "Room 1",
-		turn: "White",
-		time: 60,
-		fieldArray: defaultFieldArray,
-		stageArray: [],
-		messagesArray: [],
-		players: [],
-	},
-	{
-		name: "Room 2",
-		turn: "White",
-		time: 60,
-		fieldArray: defaultFieldArray,
-		stageArray: [],
-		messagesArray: [],
-		players: [],
-	},
-	{
-		name: "Room 3",
-		turn: "White",
-		time: 60,
-		fieldArray: defaultFieldArray,
-		stageArray: [],
-		messagesArray: [],
-		players: [],
-	},
-	{
-		name: "Room 4",
-		turn: "White",
-		time: 60,
-		fieldArray: defaultFieldArray,
-		stageArray: [],
-		messagesArray: [],
-		players: [],
-	},
-	{
-		name: "Room 5",
-		turn: "White",
-		time: 60,
-		fieldArray: defaultFieldArray,
-		stageArray: [],
-		messagesArray: [],
-		players: [],
-	},
-];
+		/*
+		Requests:
+		newUser, message, typing, getRooms, getRoomData, joinToRoom, leaveRoom, resetRoomData, disconnect
 
-console.log("restart");
+		Responses:
+		newUserResponse (to address), messageResponse (to address), typingResponse (to address),
+		getUsersResponse, getRoomsResponse (to address or by update), getRoomDataResponse (to address)
+ 	 	*/
 
-socketIO.on("connection", (socket) => {
-	console.log(`⚡: socket ${socket.id} just connected!`);
-
-	socket.on("newUser", (data) => {
-		console.log(`⚡newUser Request by socket ${socket.id} with username: ${data.username}`);
-		const checkUserSocket = users.find((user) => user.socketID == socket.id);
-		if (checkUserSocket == undefined) {
-			const checkUserName = users.find((user) => user.username == data.username);
-			if (checkUserName == undefined) {
-				users.push({ ...data, socketID: socket.id });
-				socketIO.to(socket.id).emit("newUserResponse", { username: data.username, accepted: true });
-				// socketIO.emit("newUserResponse", users);
-				console.log(`⚡newUser Response⚡: user ${data.username}(${socket.id}) added to users list. Users list: users<Array>`);
+		socket.on("newUser", (data) => {
+			// data = { name }
+			console.log(`newUser Request by socket ${socket.id} with name: ${data.name}`);
+			const checkUserID = usersArray.find((user) => user.id == socket.id);
+			if (checkUserID == undefined) {
+				const checkUserName = usersArray.find((user) => user.name == data.name);
+				if (checkUserName == undefined) {
+					usersArray.push({ ...data, id: socket.id });
+					server.io.to(socket.id).emit("newUserResponse", { userName: data.name, accepted: true });
+					console.log(`newUserResponse: user ${data.name} added to users list.`);
+					server.io.emit("getUsersResponse", usersArray);
+				} else {
+					server.io.to(socket.id).emit("newUserResponse", { userName: data.name, accepted: false });
+					console.log(`newUserResponse: name ${data.name}, already used by socket ${checkUserName.id}`);
+				}
 			} else {
-				socketIO.to(socket.id).emit("newUserResponse", { username: data.username, accepted: false });
-				console.log(`⚡newUser Response⚡: username ${data.username} already used by socket ${checkUserName.socketID}`);
+				server.io.to(socket.id).emit("newUserResponse", { userName: data.name, accepted: false });
+				console.log(`newUserResponse: socket ${socket.id}, already used by user ${checkUserID.name}`);
 			}
-		} else {
-			socketIO.to(socket.id).emit("newUserResponse", { username: data.username, accepted: false });
-			console.log(`⚡newUser Response⚡: socket ${socket.id} already used by user ${checkUserSocket.username}`);
-		}
-	});
-
-	socket.on("getServersArray", (data) => {
-		console.log(`⚡getServersArray Request by ${data.username}(${socket.id})`);
-		socketIO.to(socket.id).emit("getServersArrayResponse", servers);
-	});
-
-	socket.on("joinToServer", (data) => {
-		let user = users.find((user) => user.username == data.username);
-		servers = servers.map((server) => {
-			if (server.name == data.serverName) {
-				server.players.push({ ...user, team: data.team });
-				console.log(`⚡joinToServer Response⚡: ${data.username} joined to ${server.name}`);
-				server.players.map((player) => {
-					socketIO.to(player.socketID).emit("getServerDataResponse", server);
-					let msg = {
-						username: "Server",
-						text: `${data.username} join to room`,
-						id: `${socket.id}-${Date.now()}`,
-						date: Date.now(),
-						serverName: server.name,
-					};
-					server.messagesArray.push(msg);
-					socketIO.to(player.socketID).emit("messageResponse", msg);
-				});
-			}
-			return server;
 		});
-		socketIO.emit("getServersArrayResponse", servers);
-	});
 
-	socket.on("LeaveFromServer", (data) => {
-		servers = servers.map((server) => {
-			if (server.name == data.serverName) {
-				server = { ...server, players: server.players.filter((player) => player.socketID !== socket.id) };
-				console.log(`⚡LeaveFromServer Response⚡: ${data.username} leave from ${server.name}`);
-				server.players.map((player) => {
-					socketIO.to(player.socketID).emit("getServerDataResponse", server);
-					let msg = {
-						username: "Server",
-						text: `${data.username} leave room`,
-						id: `${socket.id}-${Date.now()}`,
-						date: Date.now(),
-						serverName: server.name,
-					};
-					server.messagesArray.push(msg);
-					socketIO.to(player.socketID).emit("messageResponse", msg);
+		socket.on("message", (data) => {
+			// data = { id, roomName, userName, text, date }
+			roomsArray = roomsArray.map((room) => {
+				if (room.name == data.roomName) {
+					room.messagesArray.push(data);
+				}
+				room.players.map((player) => {
+					server.io.to(player.id).emit("messageResponse", data);
+					console.log(`message from ${data.userName} to ${player.name} at ${room.name}`);
 				});
-			}
-			return server;
-		});
-		socketIO.emit("getServersArrayResponse", servers);
-	});
-
-	socket.on("getServerData", (data) => {
-		console.log(`⚡getServerData Request by ${data.username} of server ${data.serverName}`);
-		let server = servers.find((server) => server.name == data.serverName);
-		socketIO.to(socket.id).emit("getServerDataResponse", server);
-	});
-
-	socket.on("updateServerData", (data) => {
-		console.log(`⚡updateServerData Request by ${data.username} of server ${data.serverName} at ${data.time}`);
-		servers = servers.map((server) => {
-			if (server.name == data.serverName) {
-				if (data.fieldArray != undefined) {
-					server.fieldArray = data.fieldArray;
-				}
-				if (data.stageArray != undefined) {
-					server.stageArray = [...server.stageArray, data.stageArray];
-				}
-				if (data.turn != undefined) {
-					server.turn = data.turn;
-				}
-				if (data.time != undefined) {
-					server.time = data.time;
-				}
-
-				server.players.map((player) => {
-					socketIO.to(player.socketID).emit("getServerDataResponse", server);
-				});
-			}
-			return server;
-		});
-	});
-
-	socket.on("message", (data) => {
-		servers = servers.map((server) => {
-			if (server.name == data.serverName) {
-				server.messagesArray.push(data);
-			}
-			server.players.map((player) => {
-				socketIO.to(player.socketID).emit("messageResponse", data);
-				console.log(`⚡message from ${data.username} to ${player.username} at ${server.name}`);
+				return room;
 			});
-			return server;
 		});
-	});
 
-	socket.on("typing", (data) => {
-		// console.log(`⚡typing Request by ${data.username} of server ${data.serverName} with text: ${data.text}`);
-		servers.map((server) => {
-			if (server.name == data.serverName) {
-				server.players.map((player) => {
-					if (player.username != data.username) {
-						socketIO.to(player.socketID).emit("typingResponse", data);
-						// console.log(`⚡typing from ${data.username} to ${player.username} at ${server.name}`);
+		socket.on("typing", (data) => {
+			// data = { id, roomName, userName, text }
+			roomsArray.map((room) => {
+				if (room.name == data.roomName) {
+					room.players.map((player) => {
+						if (player.name != data.userName) {
+							server.io.to(player.id).emit("typingResponse", data);
+						}
+					});
+				}
+			});
+		});
+
+		socket.on("getRooms", (data) => {
+			// data = { userName }
+			console.log(`getRooms Request by ${data.userName}`);
+			server.io.to(socket.id).emit("getRoomsResponse", roomsArray);
+		});
+
+		socket.on("getRoomData", (data) => {
+			// data = { userName, roomName }
+			console.log(`getRoomData Request by ${data.userName} of ${data.roomName}`);
+			let room = roomsArray.find((room) => room.name == room.roomName);
+			server.io.to(socket.id).emit("getRoomDataResponse", room);
+		});
+
+		socket.on("joinToRoom", (data) => {
+			// data = { userName, roomName, userTeam }
+			let user = usersArray.find((user) => user.name == data.userName);
+			roomsArray = roomsArray.map((room) => {
+				if (room.name == data.roomName) {
+					room.players.push({ ...user, team: data.userTeam });
+					console.log(`Server: ${data.userName} joined to ${room.name}`);
+					room.players.map((player) => {
+						server.io.to(player.id).emit("getRoomDataResponse", room);
+						let msg = {
+							id: `${socket.id}-${Date.now()}`,
+							userName: "Server",
+							text: `${data.userName} join to room`,
+							date: Date.now(),
+						};
+						room.messagesArray.push(msg);
+						server.io.to(player.id).emit("messageResponse", msg);
+					});
+				}
+				return room;
+			});
+			server.io.emit("getRoomsResponse", roomsArray);
+		});
+
+		socket.on("leaveRoom", (data) => {
+			// data = { userName, roomName }
+			roomsArray = roomsArray.map((room) => {
+				if (room.name == data.roomName) {
+					room = { ...room, players: room.players.filter((player) => player.id !== socket.id) };
+					console.log(`Server: ${data.userName} leave from ${room.name}`);
+					room.players.map((player) => {
+						server.io.to(player.id).emit("getRoomDataResponse", room);
+						let msg = {
+							id: `${socket.id}-${Date.now()}`,
+							userName: "Server",
+							text: `${data.userName} leave room`,
+							date: Date.now(),
+						};
+						room.messagesArray.push(msg);
+						server.io.to(player.id).emit("messageResponse", msg);
+					});
+				}
+				return room;
+			});
+			server.io.emit("getRoomsResponse", roomsArray);
+		});
+
+		socket.on("updateRoomData", (data) => {
+			// data = { userName, roomName, ?fieldArray, ?toStageArray, ?turn, ?gameTimer, ?mated, ?winner }
+			console.log(`updateRoomData Request by ${data.userName} of ${data.roomName} at ${data.time}.`);
+			roomsArray = roomsArray.map((room) => {
+				if (room.name == data.roomName) {
+					if (data.fieldArray != undefined) {
+						room.fieldArray = data.fieldArray;
+						room.fieldLastUpdateTime = Date.now();
 					}
-				});
-			}
-		});
-	});
-
-	socket.on("resetServerData", (data) => {
-		console.log(`⚡resetServerData Request by ${data.username} of server ${data.serverName}`);
-		servers = servers.map((server) => {
-			if (server.name == data.serverName) {
-				server.fieldArray = [...defaultFieldArray];
-				server.turn = "White";
-				server.time = 60;
-				server.stageArray = [];
-				server.messagesArray = [];
-				server.players.map((player) => {
-					socketIO.to(player.socketID).emit("getServerDataResponse", server);
-				});
-			}
-			return server;
-		});
-	});
-
-	socket.on("disconnect", () => {
-		let user = users.find((user) => user.socketID == socket.id);
-		if (user == undefined) {
-			console.log(`⚡disconnect Response⚡: socket ${socket.id}) disconnected`);
-		} else {
-			users = users.filter((user) => user.socketID !== socket.id);
-			servers = servers.map((server) => {
-				server = { ...server, players: server.players.filter((player) => player.socketID !== socket.id) };
-				server.players.map((player) => {
-					socketIO.to(player.socketID).emit("getServerDataResponse", server);
-					let msg = {
-						username: "Server",
-						text: `${user.username} disconnected`,
-						id: `${socket.id}-${Date.now()}`,
-						date: Date.now(),
-						serverName: server.name,
-					};
-					server.messagesArray.push(msg);
-					socketIO.to(player.socketID).emit("messageResponse", msg);
-				});
-				return server;
+					if (data.stageArray != undefined) {
+						room.stageArray = [...room.stageArray, data.toStageArray];
+					}
+					if (data.turn != undefined) {
+						room.turn = data.turn;
+					}
+					if (data.gameTimer != undefined) {
+						room.gameTimer = data.gameTimer;
+					}
+					if (data.mated != undefined) {
+						console.log(`${data.mated} team mated by ${data.userName}`);
+						room.mated = data.mated;
+						room.players.map((player) => {
+							server.io.to(player.id).emit("getRoomDataResponse", room);
+							let msg = {
+								id: `${socket.id}-${Date.now()}`,
+								userName: "Server",
+								text: `${data.mated} team mated!`,
+								date: Date.now(),
+							};
+							room.messagesArray.push(msg);
+							server.io.to(player.id).emit("messageResponse", msg);
+						});
+					}
+					if (data.winner != undefined) {
+						console.log(`${data.win} team win by ${data.userName}`);
+						room.winner = data.winner;
+						room.players.map((player) => {
+							server.io.to(player.id).emit("getRoomDataResponse", room);
+							let msg = {
+								id: `${socket.id}-${Date.now()}`,
+								userName: "Server",
+								text: `${data.winner} team win!`,
+								date: Date.now(),
+							};
+							room.messagesArray.push(msg);
+							server.io.to(player.id).emit("messageResponse", msg);
+						});
+					}
+					room.lastUpdateTime = Date.now();
+					room.players.map((player) => {
+						server.io.to(player.id).emit("getRoomDataResponse", room);
+					});
+				}
+				return room;
 			});
-			// socketIO.emit("newUserResponse", users);
-			socketIO.emit("getServersArrayResponse", servers);
+		});
 
-			console.log(`⚡disconnect Response⚡: user ${user.username}(${socket.id}) disconnected. Users list:`, users);
-		}
-		socket.disconnect();
+		socket.on("resetRoomData", (data) => {
+			// data = { userName, roomName }
+			console.log(`resetRoomData Request by ${data.userName} of ${data.roomName}`);
+			roomsArray = roomsArray.map((room) => {
+				if (room.name == data.roomName) {
+					room.fieldArray = [...defaultFieldArray];
+					room.turn = "White";
+					room.stageArray = [];
+					room.messagesArray = [];
+					room.mated = undefined;
+					room.winner = undefined;
+					room.gameTimer = 0;
+					room.lastUpdateTime = Date.now();
+					room.fieldLastUpdateTime = Date.now();
+					room.players.map((player) => {
+						server.io.to(player.id).emit("getRoomDataResponse", room);
+					});
+				}
+				return room;
+			});
+		});
+
+		socket.on("disconnect", () => {
+			let user = usersArray.find((user) => user.id == socket.id);
+			if (user == undefined) {
+				console.log(`Server: socket ${socket.id}) disconnected`);
+			} else {
+				usersArray = usersArray.filter((user) => user.id !== socket.id);
+				roomsArray = roomsArray.map((room) => {
+					room = { ...room, players: room.players.filter((player) => player.id !== socket.id) };
+					room.players.map((player) => {
+						server.io.to(player.id).emit("getRoomDataResponse", room);
+						let msg = {
+							id: `${socket.id}-${Date.now()}`,
+							userName: "Server",
+							text: `${user.name} disconnected`,
+							date: Date.now(),
+						};
+						room.messagesArray.push(msg);
+						server.io.to(player.id).emit("messageResponse", msg);
+					});
+					return room;
+				});
+				server.io.emit("getUsersResponse", usersArray);
+				server.io.emit("getRoomsResponse", roomsArray);
+
+				console.log(`Server: user ${user.name}(${socket.id}) disconnected.`);
+			}
+			socket.disconnect();
+		});
 	});
 });
 
-app.get("/api", (req, res) => {
-	res.json({ message: "Hello" });
+// server.get("/", function handler(request, reply) {
+// 	reply.send({ hello: "world" });
+// });
+
+server.get("/", (req, reply) => {
+	server.io.emit("hello");
 });
 
-http.listen(PORT, () => {
-	console.log(`Server listening on ${PORT}`);
+server.listen({ port: 4000 }, (err) => {
+	if (err) {
+		server.log.error(err);
+		process.exit(1);
+	}
 });

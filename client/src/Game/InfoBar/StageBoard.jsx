@@ -1,5 +1,6 @@
-import css from "./index.module.scss";
 import Field from "../Field";
+import css from "./index.module.scss";
+
 
 export default function StageBoard({ team, stageArray }) {
 	// console.log("component StageBoard  rendering...");

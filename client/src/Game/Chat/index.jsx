@@ -3,28 +3,32 @@ import { useEffect, useRef, useState } from "react";
 import { Button, TextField } from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
-import { useSelector } from "react-redux";
 import moment from "moment";
 
 const validationSchema = yup.object({
 	text: yup.string("Enter your text").required("Text is required"),
 });
 
-export default function Chat({ socket }) {
+export default function Chat({ socket, loggedUser, roomData }) {
 	const [typingStatus, setTypingStatus] = useState("");
 	const lastMessageRef = useRef(null);
-	const loggedUser = useSelector((state) => state.data.loggedUser);
-	const playerTeam = useSelector((state) => state.data.playerTeam);
-	const joinedServerData = useSelector((state) => state.data.joinedServerData);
-	const [messagesArray, setMessagesArray] = useState(joinedServerData.messagesArray);
-	let enemyTeam;
-	if (playerTeam == "Black") {
-		enemyTeam = "White";
-	} else {
-		enemyTeam = "Black";
-	}
+	const [messagesArray, setMessagesArray] = useState(roomData.messagesArray);
 
-	let enemy = joinedServerData.players.find((u) => u.team == enemyTeam);
+	console.log("Компонент Chat обновлён, ", moment().format("h:mm:ss:ms"));
+	useEffect(() => {
+		console.log("Компонент Chat отрендерен, ", moment().format("h:mm:ss:ms"));
+		return () => {
+			console.log("Компонент Chat размонтирован, ", moment().format("h:mm:ss:ms"));
+		};
+	}, []);
+
+	const player = roomData.players.find((user) => user.name == loggedUser.name);
+
+	let enemyTeam;
+	if (player.team == "Black") enemyTeam = "White";
+	else enemyTeam = "Black";
+
+	const enemy = roomData.players.find((u) => u.team == enemyTeam);
 
 	const formik = useFormik({
 		initialValues: {
@@ -34,11 +38,11 @@ export default function Chat({ socket }) {
 		onSubmit: (values, action) => {
 			action.resetForm();
 			socket.emit("message", {
-				username: loggedUser,
-				text: values.text,
 				id: `${socket.id}-${Date.now()}`,
+				userName: loggedUser.name,
+				roomName: roomData.name,
+				text: values.text,
 				date: Date.now(),
-				serverName: joinedServerData.name,
 			});
 		},
 	});
@@ -64,7 +68,7 @@ export default function Chat({ socket }) {
 						return (
 							<div
 								key={`${item.text}-${item.id}-${Math.random() * 999}`}
-								className={item.username == loggedUser ? css.PlayerMessage : item.username == enemy?.username ? css.OpponentMessage : css.ServerMessage}
+								className={item.userName == loggedUser.name ? css.PlayerMessage : item.userName == enemy?.name ? css.OpponentMessage : css.ServerMessage}
 							>
 								<div>
 									<p>{item.text}</p>
@@ -87,11 +91,10 @@ export default function Chat({ socket }) {
 					onChange={formik.handleChange}
 					onKeyDown={() => {
 						if (enemy != undefined) {
-							console.log(enemy);
 							socket.emit("typing", {
-								username: loggedUser,
-								text: `${loggedUser} is typing`,
-								serverName: joinedServerData.name,
+								userName: loggedUser.name,
+								roomName: roomData.name,
+								text: `${loggedUser.name} is typing`,
 							});
 						}
 					}}
@@ -99,9 +102,9 @@ export default function Chat({ socket }) {
 						formik.handleBlur;
 						if (enemy != undefined) {
 							socket.emit("typing", {
-								username: loggedUser,
+								userName: loggedUser.name,
+								roomName: roomData.name,
 								text: ``,
-								serverName: joinedServerData.name,
 							});
 						}
 					}}

@@ -1,79 +1,97 @@
-import LoginFormModal from "./components/LoginFormModal";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Swal from "sweetalert2";
-import { setLoggedUser, setUserAccepted } from "./redux/dataSlice";
-import ServersList from "./components/ServersList";
-import GamePage from "./components/GamePage";
+import { useEffect, useRef, useState } from "react";
 import LoadingModal from "./components/LoadingModal";
-import DragAndDrop from "./components/DragAndDrop/index";
+import LoginFormModal from "./components/LoginFormModal";
+import ServersList from "./components/ServersList";
+import moment from "moment";
+import Game from "./Game";
+
+function GetUserFromLS() {
+	let result = null;
+
+	const LSloggedUser = JSON.parse(localStorage.getItem("ChessGameUserName"));
+	const SSloggedUser = JSON.parse(sessionStorage.getItem("ChessGameUserName"));
+	if (SSloggedUser) result = SSloggedUser;
+	else if (LSloggedUser) result = LSloggedUser;
+
+	return result;
+}
 
 export default function App({ socket }) {
-	console.log("component App rendering...");
-
-	const dispatch = useDispatch();
 	const [inGame, setInGame] = useState(false);
-	const loggedUser = useSelector((state) => state.data.loggedUser);
-	const userAccepted = useSelector((state) => state.data.userAccepted);
+	const [loggedUser, setLoggedUser] = useState({ name: GetUserFromLS(), accepted: false });
+	console.log("🚀 ~ App ~ loggedUser:", loggedUser);
+	const prevLoggedUser = useRef(loggedUser);
+	console.log("🚀 ~ App ~ prevLoggedUser:", prevLoggedUser);
+	// useRef
+
+	console.log("Компонент App обновлён, ", moment().format("h:mm:ss:ms"));
+	useEffect(() => {
+		console.log("Компонент App отрендерен, ", moment().format("h:mm:ss:ms"));
+		return () => {
+			console.log("Компонент App размонтирован, ", moment().format("h:mm:ss:ms"));
+		};
+	}, []);
 
 	useEffect(() => {
-		if (loggedUser != null) {
-			console.log("🚀 ~ useEffect ~ loggedUser:", loggedUser);
+		if (loggedUser.name != null) {
 			if (socket.connected == false) {
-				console.log("socket.connect();");
+				console.log("Client: socket.connect()");
 				socket.connect();
 			}
 		}
-	}, [loggedUser]);
+	}, [loggedUser.name]);
 
 	useEffect(() => {
-		if (loggedUser != null) {
+		if (loggedUser.name != null) {
 			socket.on("connect", () => {
-				console.log("socket connected. id: ", socket.id); // x8WIv7-mJelg7on_ALbx
-				console.log(`connected with transport ${socket.io.engine.transport.name}`);
+				console.log("Client: socket connected. id: ", socket.id);
+				console.log(`Client:connected with transport ${socket.io.engine.transport.name}`);
 				socket.io.engine.on("upgrade", (transport) => {
 					console.log(`transport upgraded to ${transport.name}`);
 				});
 				socket.connected = true;
-				console.log("socket.emit ", loggedUser);
-				socket.emit("newUser", { username: loggedUser });
+				console.log("Client: socket.emit newUser");
+				socket.emit("newUser", { name: loggedUser.name });
 			});
 
 			socket.on("newUserResponse", (data) => {
-				console.log("newUserResponse: ", data);
+				console.log("Client: newUserResponse: ", data);
 				if (data.accepted == true) {
-					localStorage.setItem("ChessGameUserName", JSON.stringify(data.username));
-					dispatch(setUserAccepted(true));
+					localStorage.setItem("ChessGameUserName", JSON.stringify(data.userName));
+					setLoggedUser({ ...loggedUser, accepted: true });
 				} else {
-					dispatch(setLoggedUser(null));
-					Swal.fire("User already connected!");
+					setLoggedUser({ ...loggedUser, name: null, accepted: false });
+					alert("User already connected!");
 				}
 			});
 
 			socket.on("connect_error", (err) => {
-				console.log(`connect_error due to ${err.message}`);
-				dispatch(setUserAccepted(false));
+				socket.connected = false;
+				console.log(`Client: connect_error due to ${err.message}`);
+				setLoggedUser({ ...loggedUser, accepted: false });
 				setInGame(false);
 			});
 
 			socket.on("disconnect", (reason) => {
-				console.log(`disconnect due to ${reason}`);
-				dispatch(setUserAccepted(false));
+				socket.connected = false;
+				console.log(`Client: disconnect due to ${reason}`);
+				setLoggedUser({ ...loggedUser, accepted: false });
 				setInGame(false);
 			});
 		}
 		return () => {
-			console.log("socket.removeAllListeners()");
+			console.log("Client: socket.removeAllListeners()");
 			socket.removeAllListeners();
 		};
 	}, [socket, loggedUser]);
 
 	return (
 		<>
-			<LoadingModal openLoadingModal={(userAccepted == false) & (loggedUser != null)} loggedUser={loggedUser} />
-			{loggedUser == null ? <LoginFormModal /> : null}
-			{!inGame && <ServersList socket={socket} setInGame={setInGame} />}
-			{inGame && <GamePage socket={socket} setInGame={setInGame} />}
+			<p style={{ position: "absolute" }}>{socket.connected ? "connected" : "disconnected"}</p>
+			<LoadingModal openLoadingModal={loggedUser.accepted == false && loggedUser.name != null} loggedUser={loggedUser} connected={socket.connected} />
+			{loggedUser.name == null ? <LoginFormModal loggedUser={loggedUser} setLoggedUser={setLoggedUser} /> : null}
+			{!inGame && <ServersList socket={socket} loggedUser={loggedUser} setLoggedUser={setLoggedUser} setInGame={setInGame} />}
+			{inGame && <Game socket={socket} loggedUser={loggedUser} setLoggedUser={setLoggedUser} setInGame={setInGame} />}
 		</>
 	);
 }

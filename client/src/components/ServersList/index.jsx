@@ -8,24 +8,24 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { setJoinedServerData, setLoggedUser, setPlayerTeam, setUserAccepted } from "../../redux/dataSlice";
-import Swal from "sweetalert2";
 import LinearProgress from "@mui/material/LinearProgress";
-
-export default function ServersList({ socket, setSocketConnected, setInGame }) {
-	console.log("component ServersPage rendering...");
-
-	const dispatch = useDispatch();
+import moment from "moment";
+export default function ServersList({ socket, loggedUser, setLoggedUser, setInGame }) {
 	const [serversArray, setServersArray] = useState(null);
-	const loggedUser = useSelector((state) => state.data.loggedUser);
-	const userAccepted = useSelector((state) => state.data.userAccepted);
+
+	console.log("Компонент ServersList обновлён, ", moment().format("h:mm:ss:ms"));
+	useEffect(() => {
+		console.log("Компонент ServersList отрендерен, ", moment().format("h:mm:ss:ms"));
+		return () => {
+			console.log("Компонент ServersList размонтирован, ", moment().format("h:mm:ss:ms"));
+		};
+	}, []);
 
 	useEffect(() => {
-		if (userAccepted) {
+		if (loggedUser.accepted) {
 			console.log("socket.emit(`getServersArray`, { username: loggedUser })");
-			socket.emit("getServersArray", { username: loggedUser });
-			socket.on("getServersArrayResponse", (data) => {
+			socket.emit("getRooms", { userName: loggedUser.name });
+			socket.on("getRoomsResponse", (data) => {
 				console.log("setServersArray(data)");
 				setServersArray(data);
 			});
@@ -35,26 +35,25 @@ export default function ServersList({ socket, setSocketConnected, setInGame }) {
 		}
 
 		return () => {
-			console.log("socket.removeAllListeners(getServersArrayResponse)");
+			console.log("Client: socket.removeAllListeners(getServersArrayResponse)");
 			socket.removeAllListeners("getServersArrayResponse");
 		};
-	}, [socket, userAccepted]);
+	}, [socket, loggedUser.accepted]);
 
 	return (
 		<div>
 			<div className={css.Top}>
 				<h3>Rooms: </h3>
-				{loggedUser ? (
+				{loggedUser.name ? (
 					<div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-						<h3>Username: {loggedUser}</h3>
+						<h3>Username: {loggedUser.name}</h3>
 						<Button
 							color="primary"
 							variant="outlined"
 							onClick={() => {
 								socket.disconnect();
 								localStorage.clear("ChessGameUserName");
-								dispatch(setLoggedUser(null));
-								dispatch(setUserAccepted(false));
+								setLoggedUser({ ...loggedUser, name: null, accepted: false });
 							}}
 						>
 							Log out
@@ -84,9 +83,7 @@ export default function ServersList({ socket, setSocketConnected, setInGame }) {
 												color="primary"
 												variant="outlined"
 												onClick={() => {
-													socket.emit("joinToServer", { serverName: server.name, username: loggedUser, team: "Black" });
-													dispatch(setPlayerTeam("Black"));
-													dispatch(setJoinedServerData(server));
+													socket.emit("joinToRoom", { userName: loggedUser.name, roomName: server.name, userTeam: "Black" });
 													setInGame(true);
 													console.log("GAME START");
 												}}
@@ -103,9 +100,7 @@ export default function ServersList({ socket, setSocketConnected, setInGame }) {
 												color="primary"
 												variant="outlined"
 												onClick={() => {
-													socket.emit("joinToServer", { serverName: server.name, username: loggedUser, team: "White" });
-													dispatch(setPlayerTeam("White"));
-													dispatch(setJoinedServerData(server));
+													socket.emit("joinToRoom", { userName: loggedUser.name, roomName: server.name, userTeam: "White" });
 													setInGame(true);
 													console.log("GAME START");
 												}}

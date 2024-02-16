@@ -2,16 +2,20 @@ import { Button, TextField } from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import css from "./index.module.scss";
-import { useDispatch } from "react-redux";
-import { setLoggedUser } from "../../redux/dataSlice";
-
+import { useEffect } from "react";
+import moment from "moment";
 const validationSchema = yup.object({
 	username: yup.string("Enter your username").min(3, "Min. 3 letters").max(10, "Max. 10 letters").required("Username is required"),
 });
 
-export default function LoginFormModal() {
-	console.log("component LoginFormModal rendering...");
-	const dispatch = useDispatch();
+export default function LoginFormModal({ loggedUser, setLoggedUser }) {
+	console.log("Компонент LoginFormModal обновлён, ", moment().format("h:mm:ss:ms"));
+	useEffect(() => {
+		console.log("Компонент LoginFormModal отрендерен, ", moment().format("h:mm:ss:ms"));
+		return () => {
+			console.log("Компонент LoginFormModal размонтирован, ", moment().format("h:mm:ss:ms"));
+		};
+	}, []);
 
 	const formik = useFormik({
 		initialValues: {
@@ -20,7 +24,7 @@ export default function LoginFormModal() {
 		validationSchema: validationSchema,
 		onSubmit: (values, action) => {
 			action.resetForm();
-			dispatch(setLoggedUser(values.username));
+			setLoggedUser({ ...loggedUser, name: values.username, accepted: false });
 		},
 	});
 
