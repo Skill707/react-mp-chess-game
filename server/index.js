@@ -13,8 +13,8 @@ server.register(fastifyIO, {
 // user = { id, name }
 let usersArray = [];
 
-const defaultFieldArray = require("./components/defaultFieldArray.js");
-let roomsArray = require("./components/roomsArray.js");
+const defaultFieldArray = require("./defaultFieldArray.js");
+let roomsArray = require("./roomsArray.js");
 
 server.ready().then(() => {
 	server.io.on("connection", (socket) => {

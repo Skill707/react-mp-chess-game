@@ -4,7 +4,7 @@ import App from "./App.jsx";
 import "./index.css";
 import socketIO from "socket.io-client";
 
-const socket = socketIO("http://localhost:4000", { autoConnect: false });
+const socket = socketIO("https://chess-game-server.glitch.me", { autoConnect: false });
 // http://localhost:4000
 // https://chess-game-server.glitch.me
 
