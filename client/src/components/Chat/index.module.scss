@@ -1,9 +1,11 @@
 .Chat {
-    padding: 8px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     gap: 8px;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(128, 128, 128, 0.5);
 }
 
 .Messages {
@@ -42,7 +44,7 @@
     justify-content: end;
 
     div {
-        border-radius: 10px;
+        border-radius: 4px;
         background-color: coral;
         width: fit-content;
         padding: 4px;
@@ -68,7 +70,7 @@
     justify-content: start;
 
     div {
-        border-radius: 10px;
+        border-radius: 4px;
         background-color: burlywood;
         width: fit-content;
         padding: 4px;
@@ -93,7 +95,7 @@
     justify-content: center;
 
     div {
-        border-radius: 10px;
+        border-radius: 4px;
         background-color: darkgray;
         width: fit-content;
         padding: 4px;

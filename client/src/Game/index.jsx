@@ -1,33 +1,29 @@
-import moment from "moment";
 import { useEffect, useState } from "react";
-import Chat from "./Chat";
+import Chat from "../components/Chat";
 import Board from "./Board";
 import InfoBar from "./InfoBar";
 
-export default function Game({ socket, loggedUser, setLoggedUser, setInGame }) {
+export default function Game({ socket, loggedUser, setInGame }) {
 	const [roomData, setRoomData] = useState(null);
 
-	console.log("Компонент Game обновлён, ", moment().format("h:mm:ss:ms"));
+	console.count("Компонент Game обновлён");
 	useEffect(() => {
-		console.log("Компонент Game отрендерен, ", moment().format("h:mm:ss:ms"));
+		console.count("Компонент Game отрендерен");
 		return () => {
-			console.log("Компонент Game размонтирован, ", moment().format("h:mm:ss:ms"));
+			console.count("Компонент Game размонтирован");
 		};
 	}, []);
 
 	useEffect(() => {
+		// console.count("useEffect в Game: socket обновлён");
 		socket.on("getRoomDataResponse", (data) => {
-			if (data !== roomData) {
-				console.log("roomData: need update");
-				setRoomData(data);
-			} else {
-				console.log("roomData: dont need update");
-			}
-			return () => {
-				console.log("Client: socket.removeAllListeners(getRoomDataResponse)");
-				socket.removeAllListeners("getRoomDataResponse");
-			};
+			console.count("useEffect в Game: setRoomData(data)");
+			setRoomData(data);
 		});
+		// return () => {
+		// 	console.log("Client: socket.removeAllListeners(getRoomDataResponse)");
+		// 	socket.removeAllListeners("getRoomDataResponse");
+		// };
 	}, [socket]);
 
 	return (

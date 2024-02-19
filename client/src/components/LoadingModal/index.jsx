@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import css from "./index.module.scss";
 import moment from "moment";
+import { LinearProgress } from "@mui/material";
 
 export default function LoadingModal({ openLoadingModal, loggedUser, connected }) {
 	console.log("Компонент LoadingModal обновлён, ", moment().format("h:mm:ss:ms"));
@@ -16,7 +17,7 @@ export default function LoadingModal({ openLoadingModal, loggedUser, connected }
 			{openLoadingModal ? (
 				<div className={css.Modal}>
 					<div>
-						<span className={css.loader}></span>
+						<LinearProgress />
 					</div>
 					<div>
 						<h4>loggedUser: {JSON.stringify(loggedUser)}</h4>

@@ -6,11 +6,10 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
 import { useEffect, useState } from "react";
 import LinearProgress from "@mui/material/LinearProgress";
 import moment from "moment";
-export default function ServersList({ socket, loggedUser, setLoggedUser, setInGame }) {
+export default function ServersList({ socket, loggedUser, setInGame }) {
 	const [serversArray, setServersArray] = useState(null);
 
 	console.log("Компонент ServersList обновлён, ", moment().format("h:mm:ss:ms"));
@@ -22,6 +21,7 @@ export default function ServersList({ socket, loggedUser, setLoggedUser, setInGa
 	}, []);
 
 	useEffect(() => {
+		console.log("useEffect в ServersList: loggedUser.accepted обновлён");
 		if (loggedUser.accepted) {
 			console.log("socket.emit(`getServersArray`, { username: loggedUser })");
 			socket.emit("getRooms", { userName: loggedUser.name });
@@ -41,27 +41,11 @@ export default function ServersList({ socket, loggedUser, setLoggedUser, setInGa
 	}, [socket, loggedUser.accepted]);
 
 	return (
-		<div>
+		<div className={css.ServersList} id="ServersList">
 			<div className={css.Top}>
 				<h3>Rooms: </h3>
-				{loggedUser.name ? (
-					<div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-						<h3>Username: {loggedUser.name}</h3>
-						<Button
-							color="primary"
-							variant="outlined"
-							onClick={() => {
-								socket.disconnect();
-								localStorage.clear("ChessGameUserName");
-								setLoggedUser({ ...loggedUser, name: null, accepted: false });
-							}}
-						>
-							Log out
-						</Button>
-					</div>
-				) : null}
 			</div>
-			<TableContainer component={Paper} sx={{ minWidth: 250, maxWidth: 500, margin: "0 auto" }}>
+			<TableContainer sx={{ minWidth: 250, maxWidth: 500, margin: "0 auto" }}>
 				<Table aria-label="simple table">
 					<TableHead>
 						<TableRow>
@@ -91,7 +75,7 @@ export default function ServersList({ socket, loggedUser, setLoggedUser, setInGa
 												Join
 											</Button>
 										) : (
-											server.players.find((player) => player.team == "Black").username
+											server.players.find((player) => player.team == "Black").name
 										)}
 									</TableCell>
 									<TableCell component="th" scope="row" align="right">
@@ -108,7 +92,7 @@ export default function ServersList({ socket, loggedUser, setLoggedUser, setInGa
 												Join
 											</Button>
 										) : (
-											server.players.find((player) => player.team == "White").username
+											server.players.find((player) => player.team == "White").name
 										)}
 									</TableCell>
 								</TableRow>

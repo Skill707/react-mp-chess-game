@@ -1,0 +1,39 @@
+.UsersList {
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(128, 128, 128, 0.5);
+    overflow-y: auto;
+}
+
+
+.PlayerMessage {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+
+    div {
+        border-radius: 4px;
+        background-color: darkgray;
+        width: fit-content;
+        padding: 4px;
+        width: 100%;
+        max-width: 100%;
+
+        p:nth-child(1) {
+            margin: 0;
+            // word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        p:nth-child(2) {
+            font-size: smaller;
+            margin: 0;
+            color: rgba(0, 0, 0, 0.5)
+        }
+    }
+}

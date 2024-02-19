@@ -16,19 +16,13 @@ export default function Chat({ socket, loggedUser, roomData }) {
 
 	console.log("Компонент Chat обновлён, ", moment().format("h:mm:ss:ms"));
 	useEffect(() => {
+		socket.emit("getMainChat", { userName: loggedUser.name });
+
 		console.log("Компонент Chat отрендерен, ", moment().format("h:mm:ss:ms"));
 		return () => {
 			console.log("Компонент Chat размонтирован, ", moment().format("h:mm:ss:ms"));
 		};
 	}, []);
-
-	const player = roomData.players.find((user) => user.name == loggedUser.name);
-
-	let enemyTeam;
-	if (player.team == "Black") enemyTeam = "White";
-	else enemyTeam = "Black";
-
-	const enemy = roomData.players.find((u) => u.team == enemyTeam);
 
 	const formik = useFormik({
 		initialValues: {
@@ -49,6 +43,7 @@ export default function Chat({ socket, loggedUser, roomData }) {
 
 	useEffect(() => {
 		socket.on("messageResponse", (data) => setMessagesArray([...messagesArray, data]));
+		// socket.on("getMainChatResponse", (data) => setMessagesArray([...messagesArray, data]));
 	}, [socket, messagesArray]);
 
 	useEffect(() => {
@@ -68,7 +63,7 @@ export default function Chat({ socket, loggedUser, roomData }) {
 						return (
 							<div
 								key={`${item.text}-${item.id}-${Math.random() * 999}`}
-								className={item.userName == loggedUser.name ? css.PlayerMessage : item.userName == enemy?.name ? css.OpponentMessage : css.ServerMessage}
+								className={item.userName == loggedUser.name ? css.PlayerMessage : item.userName == "Server" ? css.ServerMessage : css.OpponentMessage}
 							>
 								<div>
 									<p>{item.text}</p>
@@ -90,23 +85,19 @@ export default function Chat({ socket, loggedUser, roomData }) {
 					value={formik.values.text}
 					onChange={formik.handleChange}
 					onKeyDown={() => {
-						if (enemy != undefined) {
-							socket.emit("typing", {
-								userName: loggedUser.name,
-								roomName: roomData.name,
-								text: `${loggedUser.name} is typing`,
-							});
-						}
+						socket.emit("typing", {
+							userName: loggedUser.name,
+							roomName: roomData.name,
+							text: `${loggedUser.name} is typing`,
+						});
 					}}
 					onBlur={() => {
 						formik.handleBlur;
-						if (enemy != undefined) {
-							socket.emit("typing", {
-								userName: loggedUser.name,
-								roomName: roomData.name,
-								text: ``,
-							});
-						}
+						socket.emit("typing", {
+							userName: loggedUser.name,
+							roomName: roomData.name,
+							text: ``,
+						});
 					}}
 					error={formik.touched.text && Boolean(formik.errors.text)}
 					helperText={formik.touched.text && formik.errors.text}

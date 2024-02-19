@@ -19,20 +19,20 @@ function Time({ socket }) {
 	// }, 100);
 
 	// if (time <= 0) {
-	// 	socket.emit("updateServerData", { username: loggedUser, serverName: roomData.name, turn: nextTurn, time: Date.now() });
+	// 	socket.emit("updateServerData", { userName: loggedUser.name, roomName: roomData.name, turn: nextTurn, time: Date.now() });
 	// }
 
 	return <h3>Time: </h3>;
 }
 
 export default function InfoBar({ socket, loggedUser, setInGame, roomData }) {
-	console.log("Компонент InfoBar обновлён, ", moment().format("h:mm:ss:ms"));
-	useEffect(() => {
-		console.log("Компонент InfoBar отрендерен, ", moment().format("h:mm:ss:ms"));
-		return () => {
-			console.log("Компонент InfoBar размонтирован, ", moment().format("h:mm:ss:ms"));
-		};
-	}, []);
+	// console.log("Компонент InfoBar обновлён, ", moment().format("h:mm:ss:ms"));
+	// useEffect(() => {
+	// 	console.log("Компонент InfoBar отрендерен, ", moment().format("h:mm:ss:ms"));
+	// 	return () => {
+	// 		console.log("Компонент InfoBar размонтирован, ", moment().format("h:mm:ss:ms"));
+	// 	};
+	// }, []);
 
 	const player = roomData.players.find((user) => user.name == loggedUser.name);
 
@@ -48,7 +48,7 @@ export default function InfoBar({ socket, loggedUser, setInGame, roomData }) {
 	if (roomData != null) {
 		oponentPlayerName = roomData.players.find((player) => player.team == enemyTeam);
 		if (oponentPlayerName != undefined) {
-			oponentPlayerName = oponentPlayerName.username;
+			oponentPlayerName = oponentPlayerName.name;
 		} else {
 			oponentPlayerName = "No player";
 		}
@@ -87,7 +87,7 @@ export default function InfoBar({ socket, loggedUser, setInGame, roomData }) {
 					<h3>
 						{enemyTeam} team: {oponentPlayerName}
 					</h3>
-					<StageBoard team={enemyTeam} stageArray={roomData.stageArray} />
+					{/* <StageBoard team={enemyTeam} stageArray={roomData.stageArray} /> */}
 				</div>
 
 				<div className={css.PlayerInfoBar}>
@@ -95,7 +95,7 @@ export default function InfoBar({ socket, loggedUser, setInGame, roomData }) {
 						{player.team} team: {loggedUser.name}
 						{roomData.turn == player.team ? ". Your turn!" : null}
 					</h3>
-					<StageBoard team={player.team} stageArray={roomData.stageArray} />
+					{/* <StageBoard team={player.team} stageArray={roomData.stageArray} /> */}
 				</div>
 			</div>
 		</div>

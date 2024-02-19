@@ -1,6 +1,6 @@
 import css from "./index.module.scss";
 import Field from "../Field";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import moment from "moment";
 
@@ -72,15 +72,14 @@ function getSideOfField2(side, item, array) {
 	return result;
 }
 
-export default function Board({ socket, loggedUser, roomData, setRoomData }) {
-	let fieldArray = roomData.fieldArray;
-	const player = roomData.players.find((user) => user.name == loggedUser.name);
+export default function Board({ socket, loggedUser, roomData }) {
+	const [fieldArraySt, setFieldArraySt] = useState(roomData.fieldArray);
 
-	console.log("Компонент Board обновлён, ", moment().format("h:mm:ss:ms"));
+	console.count("Компонент Board обновлён");
 	useEffect(() => {
-		console.log("Компонент Board отрендерен, ", moment().format("h:mm:ss:ms"));
+		console.count("Компонент Board отрендерен");
 		return () => {
-			console.log("Компонент Board размонтирован, ", moment().format("h:mm:ss:ms"));
+			console.count("Компонент Board размонтирован");
 		};
 	}, []);
 
@@ -88,6 +87,19 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 	const touchSensor = useSensor(TouchSensor);
 	const sensors = useSensors(touchSensor, mouseSensor);
 
+	const prevRoomData = useRef(roomData);
+	console.log("🚀 ~ Board ~ roomData.fieldArray:", roomData)
+	console.log("🚀 ~ Board ~ prevRoomDataFieldArray:", prevRoomData.current)
+
+	let fieldArray = fieldArraySt;
+
+	if (prevRoomData.current.fieldLastUpdateTime < roomData.fieldLastUpdateTime) {
+		console.log("new fieldArray");
+		prevRoomData.current.fieldLastUpdateTime = roomData.fieldLastUpdateTime
+		fieldArray = roomData.fieldArray
+	}
+
+	const player = roomData.players.find((user) => user.name == loggedUser.name);
 	const currentTurn = roomData.turn;
 	let nextTurn = "";
 	if (currentTurn == "Black") nextTurn = "White";
@@ -107,17 +119,17 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 		// console.log(event);
 		let selectedBox = event.active.data.current;
 		if (selectedBox != null) {
-			let fieldArray = roomData.fieldArray;
+			let tempFieldArray = [...fieldArray];
 			let sf = selectedBox;
 			if (sf.piece.type == "Pawn") {
 				for (let index = 0; index < 2; index++) {
-					if (selectedBox.piece.team == "Black") sf = getSideOfField("b", sf, fieldArray);
-					else sf = getSideOfField("t", sf, fieldArray);
+					if (selectedBox.piece.team == "Black") sf = getSideOfField("b", sf, tempFieldArray);
+					else sf = getSideOfField("t", sf, tempFieldArray);
 
 					if (sf == undefined) break;
 					else {
 						if (sf.piece == null) {
-							fieldArray = fieldArray.map((item) => {
+							tempFieldArray = tempFieldArray.map((item) => {
 								if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, path: true };
 								return item;
 							});
@@ -131,14 +143,14 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 					}
 				}
 				sf = selectedBox;
-				if (selectedBox.piece.team == "Black") sf = getSideOfField("bl", sf, fieldArray);
-				else sf = getSideOfField("tl", sf, fieldArray);
+				if (selectedBox.piece.team == "Black") sf = getSideOfField("bl", sf, tempFieldArray);
+				else sf = getSideOfField("tl", sf, tempFieldArray);
 
 				if (sf != undefined) {
 					if (sf.piece != null) {
 						if (sf.piece.team == player.team) {
 						} else if (sf.piece.team == enemyTeam) {
-							fieldArray = fieldArray.map((item) => {
+							tempFieldArray = tempFieldArray.map((item) => {
 								if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
 								return item;
 							});
@@ -146,14 +158,14 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 					}
 				}
 				sf = selectedBox;
-				if (selectedBox.piece.team == "Black") sf = getSideOfField("br", sf, fieldArray);
-				else sf = getSideOfField("tr", sf, fieldArray);
+				if (selectedBox.piece.team == "Black") sf = getSideOfField("br", sf, tempFieldArray);
+				else sf = getSideOfField("tr", sf, tempFieldArray);
 
 				if (sf != undefined) {
 					if (sf.piece != null) {
 						if (sf.piece.team == player.team) {
 						} else if (sf.piece.team == enemyTeam) {
-							fieldArray = fieldArray.map((item) => {
+							tempFieldArray = tempFieldArray.map((item) => {
 								if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
 								return item;
 							});
@@ -164,11 +176,11 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 				["t", "b", "l", "r"].forEach((side) => {
 					sf = selectedBox;
 					for (let index = 0; index < 8; index++) {
-						sf = getSideOfField(side, sf, fieldArray);
+						sf = getSideOfField(side, sf, tempFieldArray);
 						if (sf == undefined) break;
 						else {
 							if (sf.piece == null) {
-								fieldArray = fieldArray.map((item) => {
+								tempFieldArray = tempFieldArray.map((item) => {
 									if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, path: true };
 									return item;
 								});
@@ -176,7 +188,7 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 								if (sf.piece.team == player.team) {
 									break;
 								} else if (sf.piece.team == enemyTeam) {
-									fieldArray = fieldArray.map((item) => {
+									tempFieldArray = tempFieldArray.map((item) => {
 										if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
 										return item;
 									});
@@ -189,16 +201,16 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 			} else if (sf.piece.type == "Knight") {
 				["tl", "tr", "bl", "br", "lt", "lb", "rt", "rb"].forEach((side) => {
 					sf = selectedBox;
-					sf = getSideOfField2(side, sf, fieldArray);
+					sf = getSideOfField2(side, sf, tempFieldArray);
 					if (sf != undefined) {
 						if (sf.piece == null) {
-							fieldArray = fieldArray.map((item) => {
+							tempFieldArray = tempFieldArray.map((item) => {
 								if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, path: true };
 								return item;
 							});
 						} else {
 							if (sf.piece.team == enemyTeam) {
-								fieldArray = fieldArray.map((item) => {
+								tempFieldArray = tempFieldArray.map((item) => {
 									if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
 									return item;
 								});
@@ -210,11 +222,11 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 				["tl", "bl", "tr", "br"].forEach((side) => {
 					sf = selectedBox;
 					for (let index = 0; index < 8; index++) {
-						sf = getSideOfField(side, sf, fieldArray);
+						sf = getSideOfField(side, sf, tempFieldArray);
 						if (sf == undefined) break;
 						else {
 							if (sf.piece == null) {
-								fieldArray = fieldArray.map((item) => {
+								tempFieldArray = tempFieldArray.map((item) => {
 									if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, path: true };
 									return item;
 								});
@@ -222,7 +234,7 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 								if (sf.piece.team == player.team) {
 									break;
 								} else if (sf.piece.team == enemyTeam) {
-									fieldArray = fieldArray.map((item) => {
+									tempFieldArray = tempFieldArray.map((item) => {
 										if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
 										return item;
 									});
@@ -236,11 +248,11 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 				["t", "tl", "tr", "b", "bl", "br", "l", "r"].forEach((side) => {
 					sf = selectedBox;
 					for (let index = 0; index < 8; index++) {
-						sf = getSideOfField(side, sf, fieldArray);
+						sf = getSideOfField(side, sf, tempFieldArray);
 						if (sf == undefined) break;
 						else {
 							if (sf.piece == null) {
-								fieldArray = fieldArray.map((item) => {
+								tempFieldArray = tempFieldArray.map((item) => {
 									if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, path: true };
 									return item;
 								});
@@ -248,7 +260,7 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 								if (sf.piece.team == player.team) {
 									break;
 								} else if (sf.piece.team == enemyTeam) {
-									fieldArray = fieldArray.map((item) => {
+									tempFieldArray = tempFieldArray.map((item) => {
 										if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
 										return item;
 									});
@@ -262,11 +274,11 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 				["t", "tl", "tr", "b", "bl", "br", "l", "r"].forEach((side) => {
 					sf = selectedBox;
 					for (let index = 0; index < 1; index++) {
-						sf = getSideOfField(side, sf, fieldArray);
+						sf = getSideOfField(side, sf, tempFieldArray);
 						if (sf == undefined) break;
 						else {
 							if (sf.piece == null) {
-								fieldArray = fieldArray.map((item) => {
+								tempFieldArray = tempFieldArray.map((item) => {
 									if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, path: true };
 									return item;
 								});
@@ -274,7 +286,7 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 								if (sf.piece.team == player.team) {
 									break;
 								} else if (sf.piece.team == enemyTeam) {
-									fieldArray = fieldArray.map((item) => {
+									tempFieldArray = tempFieldArray.map((item) => {
 										if ((item.ax == sf.ax) & (item.y == sf.y)) item = { ...sf, kill: true };
 										return item;
 									});
@@ -285,167 +297,98 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 					}
 				});
 			}
-			setRoomData({ ...roomData, fieldArray: fieldArray });
+			// setRoomData({ ...roomData, tempFieldArray: tempFieldArray });
+			setFieldArraySt(tempFieldArray);
+			// fieldArray = tempFieldArray;
 		}
 	}
 
 	function handleDragEnd(event) {
 		// console.log("🚀 ~ handleDragEnd ~ event:", event);
 		if (event.over != null) {
-			let tempFieldArray = [...roomData.fieldArray];
+			let tempFieldArray = [...fieldArray];
 			let clicked = event.over.data.current;
+			console.log(clicked);
 			let selectedBox = event.active.data.current;
-			if (clicked.piece == null) {
-				if (clicked.path) {
-					let first = { ...selectedBox };
-					let { piece } = first;
-					tempFieldArray = tempFieldArray.map((item) => {
-						if ((item.ax == clicked.ax) & (item.y == clicked.y)) {
-							if ((((clicked.y == 8) & (selectedBox.piece.team == "White")) | ((clicked.y == 1) & (selectedBox.piece.team == "Black"))) & (selectedBox.piece.type == "Pawn")) {
-								item = { ...clicked, piece: { type: "Queen", team: piece.team }, path: false };
-							} else {
-								item = { ...clicked, piece: piece, path: false };
-							}
-							socket.emit("message", {
-								id: `${socket.id}-${Date.now()}`,
-								userName: loggedUser.name,
-								roomName: roomData.name,
-								text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}.`,
-								date: Date.now(),
-							});
-						}
-						if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
-						item = { ...item, path: false };
-						item = { ...item, kill: false };
-
-						return item;
-					});
-					//////
-					socket.emit("updateRoomData", { userName: loggedUser.name, roomName: roomData.name, fieldArray: tempFieldArray, turn: nextTurn });
-				}
+			if (selectedBox.x == clicked.x && selectedBox.y == clicked.y) {
+				tempFieldArray = tempFieldArray.map((item) => {
+					item = { ...item, path: false, kill: false };
+					return item;
+				});
+				// setFieldArraySt(tempFieldArray);
+				// fieldArray = tempFieldArray;
 			} else {
-				if (clicked.piece.team == currentTurn);
-				else {
-					if (clicked.kill) {
+				if (clicked.piece == null) {
+					if (clicked.path) {
 						let first = { ...selectedBox };
 						let { piece } = first;
 						tempFieldArray = tempFieldArray.map((item) => {
 							if ((item.ax == clicked.ax) & (item.y == clicked.y)) {
-								if ((clicked.y == 8) | (clicked.y == 1)) {
-									item = { ...clicked, piece: { type: "Queen", team: piece.team }, kill: false };
+								if ((((clicked.y == 8) & (selectedBox.piece.team == "White")) | ((clicked.y == 1) & (selectedBox.piece.team == "Black"))) & (selectedBox.piece.type == "Pawn")) {
+									item = { ...clicked, piece: { type: "Queen", team: piece.team }, path: false };
 								} else {
-									item = { ...clicked, piece: piece, kill: false };
+									item = { ...clicked, piece: piece, path: false };
 								}
 								socket.emit("message", {
 									id: `${socket.id}-${Date.now()}`,
 									userName: loggedUser.name,
 									roomName: roomData.name,
-									text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}. ${clicked.piece.type} down!`,
+									text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}.`,
 									date: Date.now(),
 								});
 							}
 							if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
 							item = { ...item, path: false };
 							item = { ...item, kill: false };
+
 							return item;
 						});
-						socket.emit("updateRoomData", {
-							userName: loggedUser.name,
-							roomName: roomData.name,
-							fieldArray: tempFieldArray,
-							stageArray: clicked,
-							turn: nextTurn,
-						});
+						//////
+						socket.emit("updateRoomData", { userName: loggedUser.name, roomName: roomData.name, fieldArray: tempFieldArray, turn: nextTurn });
+					}
+				} else {
+					if (clicked.piece.team == currentTurn);
+					else {
+						if (clicked.kill) {
+							let first = { ...selectedBox };
+							let { piece } = first;
+							tempFieldArray = tempFieldArray.map((item) => {
+								if ((item.ax == clicked.ax) & (item.y == clicked.y)) {
+									if ((clicked.y == 8) | (clicked.y == 1)) {
+										item = { ...clicked, piece: { type: "Queen", team: piece.team }, kill: false };
+									} else {
+										item = { ...clicked, piece: piece, kill: false };
+									}
+									socket.emit("message", {
+										id: `${socket.id}-${Date.now()}`,
+										userName: loggedUser.name,
+										roomName: roomData.name,
+										text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}. ${clicked.piece.type} down!`,
+										date: Date.now(),
+									});
+								}
+								if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
+								item = { ...item, path: false };
+								item = { ...item, kill: false };
+								return item;
+							});
+							socket.emit("updateRoomData", {
+								userName: loggedUser.name,
+								roomName: roomData.name,
+								fieldArray: tempFieldArray,
+								stageArray: clicked,
+								turn: nextTurn,
+							});
+						}
 					}
 				}
+
+				// setRoomData({ ...roomData, fieldArray: tempFieldArray });
+				// setFieldArray(tempFieldArray);
 			}
 			///
 		}
 	}
-
-	// function HandleClick(clicked) {
-	// 	if (player.team == currentTurn) {
-	// 		console.log("HandleClick ~ selectedBox: ", selectedBox, "clicked: ", clicked);
-	// 		let tempFieldArray = [...fieldArray];
-
-	// 		if (selectedBox) {
-	// 			if (selectedBox == clicked) dispatch(select(null));
-	// 			else {
-	// 				if (clicked.piece == null) {
-	// 					if (clicked.path) {
-	// 						let first = { ...selectedBox };
-	// 						let { piece } = first;
-	// 						tempFieldArray = tempFieldArray.map((item) => {
-	// 							if ((item.ax == clicked.ax) & (item.y == clicked.y)) {
-	// 								if ((((clicked.y == 8) & (selectedBox.piece.team == "White")) | ((clicked.y == 1) & (selectedBox.piece.team == "Black"))) & (selectedBox.piece.type == "Pawn")) {
-	// 									item = { ...clicked, piece: { type: "Queen", team: piece.team }, path: false };
-	// 								} else {
-	// 									item = { ...clicked, piece: piece, path: false };
-	// 								}
-	// 								socket.emit("message", {
-	// 									userName: loggedUser.name,
-	// 									text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}.`,
-	// 									id: `${socket.id}-${Date.now()}`,
-	// 									date: Date.now(),
-	// 									roomName: roomData.name,
-	// 								});
-	// 							}
-	// 							if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
-
-	// 							return item;
-	// 						});
-	// 						dispatch(select(null));
-	// 						dispatch(editFieldArray(tempFieldArray));
-	// 						dispatch(setCurrentTurn(nextTurn));
-	// 						socket.emit("updateRoomData", { userName: loggedUser.name, roomName: roomData.name, fieldArray: tempFieldArray, turn: nextTurn, time: Date.now() });
-	// 					}
-	// 				} else {
-	// 					if (clicked.piece.team == currentTurn) dispatch(select(clicked));
-	// 					else {
-	// 						if (clicked.kill) {
-	// 							let first = { ...selectedBox };
-	// 							let { piece } = first;
-	// 							tempFieldArray = tempFieldArray.map((item) => {
-	// 								if ((item.ax == clicked.ax) & (item.y == clicked.y)) {
-	// 									if ((clicked.y == 8) | (clicked.y == 1)) {
-	// 										item = { ...clicked, piece: { type: "Queen", team: piece.team }, kill: false };
-	// 									} else {
-	// 										item = { ...clicked, piece: piece, kill: false };
-	// 									}
-	// 									socket.emit("message", {
-	// 										userName: loggedUser.name,
-	// 										text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}. ${clicked.piece.type} down!`,
-	// 										id: `${socket.id}-${Date.now()}`,
-	// 										date: Date.now(),
-	// 										roomName: roomData.name,
-	// 									});
-	// 								}
-	// 								if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
-	// 								return item;
-	// 							});
-	// 							dispatch(select(null));
-	// 							dispatch(addToStageArray(clicked));
-	// 							dispatch(editFieldArray(tempFieldArray));
-	// 							dispatch(setCurrentTurn(nextTurn));
-	// 							socket.emit("updateRoomData", {
-	// 								userName: loggedUser.name,
-	// 								roomName: roomData.name,
-	// 								fieldArray: tempFieldArray,
-	// 								stageArray: clicked,
-	// 								turn: nextTurn,
-	// 								time: Date.now(),
-	// 							});
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-	// 		} else {
-	// 			if (clicked.piece != null) {
-	// 				if (clicked.piece.team == currentTurn) dispatch(select(clicked));
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	function mated(field) {
 		console.log(`mat from ${field}`);
@@ -471,7 +414,7 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 		}
 	}
 
-	console.log("🚀 ~ useEffect ~ currentMated:", currentMated);
+	// console.log("🚀 ~ useEffect ~ currentMated:", currentMated);
 	if (currentMated == undefined) {
 		fieldArray.map((field) => {
 			if (field.piece != null) {
@@ -648,7 +591,7 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 			</div>
 			<div className={css.Middle}>
 				<div className={css.NumberBar}>
-					{["8", "7", "6", "5", "4", "3", "2", "1"].map((item) => {
+					{[moment().format("ss"), "7", "6", "5", "4", "3", "2", "1"].map((item) => {
 						return <div key={item}>{item}</div>;
 					})}
 				</div>
@@ -681,4 +624,97 @@ export default function Board({ socket, loggedUser, roomData, setRoomData }) {
 			</div>
 		</div>
 	);
+
 }
+
+// useEffect(() => {
+// 	console.count("useEffect в Board: roomData.fieldArray обновлён");
+// 	if (fieldArray != roomData.fieldArray) {
+// 		console.count("useEffect в Board: setFieldArray");
+// 		setFieldArray(roomData.fieldArray);
+// 	}
+// }, [roomData.fieldArray]);
+
+// function HandleClick(clicked) {
+// 	if (player.team == currentTurn) {
+// 		console.log("HandleClick ~ selectedBox: ", selectedBox, "clicked: ", clicked);
+// 		let tempFieldArray = [...fieldArray];
+
+// 		if (selectedBox) {
+// 			if (selectedBox == clicked) dispatch(select(null));
+// 			else {
+// 				if (clicked.piece == null) {
+// 					if (clicked.path) {
+// 						let first = { ...selectedBox };
+// 						let { piece } = first;
+// 						tempFieldArray = tempFieldArray.map((item) => {
+// 							if ((item.ax == clicked.ax) & (item.y == clicked.y)) {
+// 								if ((((clicked.y == 8) & (selectedBox.piece.team == "White")) | ((clicked.y == 1) & (selectedBox.piece.team == "Black"))) & (selectedBox.piece.type == "Pawn")) {
+// 									item = { ...clicked, piece: { type: "Queen", team: piece.team }, path: false };
+// 								} else {
+// 									item = { ...clicked, piece: piece, path: false };
+// 								}
+// 								socket.emit("message", {
+// 									userName: loggedUser.name,
+// 									text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}.`,
+// 									id: `${socket.id}-${Date.now()}`,
+// 									date: Date.now(),
+// 									roomName: roomData.name,
+// 								});
+// 							}
+// 							if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
+
+// 							return item;
+// 						});
+// 						dispatch(select(null));
+// 						dispatch(editFieldArray(tempFieldArray));
+// 						dispatch(setCurrentTurn(nextTurn));
+// 						socket.emit("updateRoomData", { userName: loggedUser.name, roomName: roomData.name, fieldArray: tempFieldArray, turn: nextTurn, time: Date.now() });
+// 					}
+// 				} else {
+// 					if (clicked.piece.team == currentTurn) dispatch(select(clicked));
+// 					else {
+// 						if (clicked.kill) {
+// 							let first = { ...selectedBox };
+// 							let { piece } = first;
+// 							tempFieldArray = tempFieldArray.map((item) => {
+// 								if ((item.ax == clicked.ax) & (item.y == clicked.y)) {
+// 									if ((clicked.y == 8) | (clicked.y == 1)) {
+// 										item = { ...clicked, piece: { type: "Queen", team: piece.team }, kill: false };
+// 									} else {
+// 										item = { ...clicked, piece: piece, kill: false };
+// 									}
+// 									socket.emit("message", {
+// 										userName: loggedUser.name,
+// 										text: `${first.piece.type} from ${first.x}-${first.y} to ${clicked.x}-${clicked.y}. ${clicked.piece.type} down!`,
+// 										id: `${socket.id}-${Date.now()}`,
+// 										date: Date.now(),
+// 										roomName: roomData.name,
+// 									});
+// 								}
+// 								if ((item.ax == first.ax) & (item.y == first.y)) item = { ...first, piece: null };
+// 								return item;
+// 							});
+// 							dispatch(select(null));
+// 							dispatch(addToStageArray(clicked));
+// 							dispatch(editFieldArray(tempFieldArray));
+// 							dispatch(setCurrentTurn(nextTurn));
+// 							socket.emit("updateRoomData", {
+// 								userName: loggedUser.name,
+// 								roomName: roomData.name,
+// 								fieldArray: tempFieldArray,
+// 								stageArray: clicked,
+// 								turn: nextTurn,
+// 								time: Date.now(),
+// 							});
+// 						}
+// 					}
+// 				}
+// 			}
+// 		} else {
+// 			if (clicked.piece != null) {
+// 				if (clicked.piece.team == currentTurn) dispatch(select(clicked));
+// 			}
+// 		}
+// 	}
+// }
